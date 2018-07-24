@@ -194,17 +194,17 @@ public class Database {
         }
         for (String member_id:member_ids ) {
             Discord_member member = caching.getMember().get(member_id);
-            this.executeUpdate("UPDATE `discord_member` SET `member_id`=?,`guild_id`=?,`user_id`=?,`member_xp`=?,`member_lvl`=?,`permission_lvl`=? WHERE guild_id=? AND user_id=?",
+            this.executeUpdate("UPDATE `Discord_member` SET `member_id`=?,`guild_id`=?,`user_id`=?,`member_xp`=?,`member_lvl`=?,`permission_lvl`=? WHERE guild_id=? AND user_id=?",
                     member.getMember_id(), member.getGuild_id(), member.getUser_id(), member.getMember_xp(), member.getMember_lvl(), member.getPermission_lvl(), member.getGuild_id(), member.getUser_id());
         }
         for (Long guild_id:guild_ids ) {
             Discord_guild guild = caching.getGuilds().get(guild_id);
             if (guild.getPrefix().equals(botConfig.getPrefix())) {
-                this.executeUpdate("UPDATE `discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`guild_id`=?,`mail_channel`=?," +
+                this.executeUpdate("UPDATE `Discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`guild_id`=?,`mail_channel`=?," +
                                 "`auto_channel`=? WHERE guild_id=?",
                         guild.getReports_until_ban(), ((guild.isXp_system_activated()) ? 1 : 0), guild.getGuild_id(), guild.getMail_channel(), guild.getAuto_channel(), guild.getGuild_id());
             } else {
-                this.executeUpdate("UPDATE `discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`prefix`=?,`guild_id`=?,`mail_channel`=?," +
+                this.executeUpdate("UPDATE `Discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`prefix`=?,`guild_id`=?,`mail_channel`=?," +
                                 "`auto_channel`=? WHERE guild_id=?",
                         guild.getReports_until_ban(), ((guild.isXp_system_activated()) ? 1 : 0), guild.getPrefix(), guild.getGuild_id(), guild.getMail_channel(), guild.getAuto_channel(), guild.getGuild_id());
             }
