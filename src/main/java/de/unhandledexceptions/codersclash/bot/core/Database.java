@@ -26,6 +26,8 @@ public class Database {
     private static Logger logger = Logging.getLogger();
     private boolean connected;
 
+    private Config botconfig;
+
     private HikariConfig config;
     private HikariDataSource dataSource;
 
@@ -39,12 +41,13 @@ public class Database {
 
     private String ip, username, password, dbname, port;
 
-    public Database(String ip, String port, String dbname, String username, String password) {
+    public Database(String ip, String port, String dbname, String username, String password, Config botconfig) {
         this.ip = ip;
         this.port = port;
         this.username = username;
         this.password = password;
         this.dbname = dbname;
+        this.botconfig = botconfig;
     }
 
     public void connect() {
@@ -151,8 +154,9 @@ public class Database {
                  var preparedstatement = connection.prepareStatement("SELECT * FROM Discord_guild WHERE guild_id="+guild.getIdLong()+";")) {
                 var resultset = preparedstatement.executeQuery();
                 resultset.next();
+                String prefix = (resultset.getString("prefix") == null) ? botconfig.getPrefix() : resultset.getString("prefix");
                 caching.getGuilds().put(guild.getIdLong(), new Discord_guild(resultset.getInt("reports_until_ban"),
-                        resultset.getInt("xp_system_activated")==1, resultset.getString("prefix"),
+                        resultset.getInt("xp_system_activated") == 1, prefix,
                         guild.getIdLong(), resultset.getLong("mail_channel"), resultset.getLong("auto_channel")));
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -197,9 +201,15 @@ public class Database {
         }
         for (Long guild_id:guild_ids ) {
             Discord_guild guild = caching.getGuilds().get(guild_id);
-            this.executeUpdate("UPDATE `discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`prefix`=?,`guild_id`=?,`mail_channel`=?," +
-                    "`auto_channel`=? WHERE guild_id=?", guild.getReports_until_ban(), (guild.isXp_system_activated()) ? 1 : 0,
-                    guild.getPrefix(), guild.getGuild_id(), guild.getMail_channel(), guild.getAuto_channel(), guild.getGuild_id());
+            if (guild.getPrefix().equals(botconfig.getPrefix())) {
+                this.executeUpdate("UPDATE `discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`guild_id`=?,`mail_channel`=?," +
+                                "`auto_channel`=? WHERE guild_id=?",
+                        guild.getReports_until_ban(), ((guild.isXp_system_activated()) ? 1 : 0), guild.getGuild_id(), guild.getMail_channel(), guild.getAuto_channel(), guild.getGuild_id());
+            } else {
+                this.executeUpdate("UPDATE `discord_guild` SET `reports_until_ban`=?,`xp_system_activated`=?,`prefix`=?,`guild_id`=?,`mail_channel`=?," +
+                                "`auto_channel`=? WHERE guild_id=?",
+                        guild.getReports_until_ban(), ((guild.isXp_system_activated()) ? 1 : 0), guild.getPrefix(), guild.getGuild_id(), guild.getMail_channel(), guild.getAuto_channel(), guild.getGuild_id());
+            }
         }
         return caching;
     }

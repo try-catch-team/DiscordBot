@@ -104,6 +104,7 @@ public class Bot {
                 .put(voteCommand, "vote", "poll")
                 .put(xpCommand, "xp", "level", "lvl")
                 .put(new CachingControlCommand(this.caching), "cache")
+                .put(new CheckpermsCommand(), "checkperms")
                 .getCommandSettings()
                 .setCooldown(3000)
                 .activate();

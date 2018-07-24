@@ -48,7 +48,7 @@ public class Caching {
     public Caching updateDB() {
         logger.warn("Updating DB...");
         database.updateDB(this);
-        logger.info("Readed DB!");
+        logger.info("Updated DB!");
         return this;
     }
 
