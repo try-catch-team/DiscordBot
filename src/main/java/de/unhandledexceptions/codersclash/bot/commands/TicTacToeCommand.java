@@ -7,6 +7,7 @@ import de.unhandledexceptions.codersclash.bot.core.Main;
 import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
 import de.unhandledexceptions.codersclash.bot.game.TicTacToe;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 
@@ -20,7 +21,7 @@ import static java.lang.String.format;
 public class TicTacToeCommand implements ICommand {
 
     private TicTacToe game;
-    private final List<String> chooseGameList = List.of(Reactions.getNumber(3), Reactions.getNumber(5), Reactions.getNumber(9), Reactions.NO_EMOTE);
+    private final List<String> chooseGameList = List.of(Reactions.getNumber(1), Reactions.getNumber(3), Reactions.getNumber(5), Reactions.getNumber(9), Reactions.NO_EMOTE);
 
     public TicTacToeCommand(TicTacToe game) {
         this.game = game;
@@ -28,6 +29,9 @@ public class TicTacToeCommand implements ICommand {
 
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_WRITE))
+            return;
+
         List<Member> mentionedMembers = event.getMessage().getMentionedMembers();
         if (args.length > 0 && !mentionedMembers.isEmpty()) {
             var target = mentionedMembers.get(0);
@@ -35,7 +39,9 @@ public class TicTacToeCommand implements ICommand {
                 chooseGameList.forEach((reaction) -> msg.addReaction(reaction).queue());
                 Reactions.newMenu(member.getUser(), msg, (emoji) -> {
                     msg.delete().queue();
-                    if (emoji.equals(Reactions.getNumber(3))) {
+                    if (emoji.equals(Reactions.getNumber(1))) {
+                        waitForResponse(channel, member, target, 1);
+                    }else if (emoji.equals(Reactions.getNumber(3))) {
                         waitForResponse(channel, member, target, 3);
                     } else if (emoji.equals(Reactions.getNumber(5))) {
                         waitForResponse(channel, member, target, 5);
@@ -60,8 +66,7 @@ public class TicTacToeCommand implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        String ret = format("**Description**: Starts a game of Tic-Tac-Toe.\n\n" +
-                "**Usage**: `%s[ttt|tictactoe] @Member`\n\n**Permission level**: `0`", prefix, prefix);
-        return ret;
+        return format("**Description**: Starts a game of Tic-Tac-Toe.\n\n" +
+                "**Usage**: `%s[ttt|tictactoe] @Member`\n\n**Permission level**: `0`", prefix);
     }
 }

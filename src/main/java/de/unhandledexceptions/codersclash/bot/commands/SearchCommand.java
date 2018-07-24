@@ -35,7 +35,7 @@ public class SearchCommand implements ICommand {
 
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
-        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION))
             return;
 
         if(Permissions.getPermissionLevel(member) >= 1) {
@@ -54,7 +54,7 @@ public class SearchCommand implements ICommand {
                         sendMessage(channel, Type.SUCCESS, "Loading results...")
                                 .queue((m) -> {
                                     ListDisplay.displayList(display, m, member.getUser(), 10, (v) -> m.delete().queue());
-                                }, Messages.defaultFailure(channel));
+                                }, defaultFailure(channel));
                     }
                 });
 
@@ -64,7 +64,7 @@ public class SearchCommand implements ICommand {
                 builder.setTitle("Results").setColor(Type.SUCCESS.getColor()).setFooter(Type.SUCCESS.getFooter(), Type.SUCCESS.getFooterUrl());
                 sendMessage(channel, Type.SUCCESS, "Loading results...").queue((m) -> {
                     ListDisplay.displayList(display, m, member.getUser(), 10, (v) -> m.delete().queue());
-                }, Messages.defaultFailure(channel));
+                }, defaultFailure(channel));
             } else if (args[0].equalsIgnoreCase("display") && args[1].matches("(?i)((guilds)|(users))")) {
                 event.getMessage().delete().queue();
                 builder.setTitle("Results").setColor(Type.SUCCESS.getColor()).setFooter(Type.SUCCESS.getFooter(), Type.SUCCESS.getFooterUrl());
@@ -126,12 +126,7 @@ public class SearchCommand implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 2
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `5`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : format("**Description**: Let's you search for a specific user/guild.\nYou don't need to input the whole name.\nIt can also display all users/guilds.\n\n" +
-                "**Usage**: `%s[search|looksfor|browse] [user|guild] <name>`\n\t\t\t  `%s[search|looksfor|browse] display [users|guilds]`\n\n**Permission level**: `2`", prefix, prefix);
-        return ret;
+        return format("**Description**: Let's you search for a specific user/guild.\nYou don't need to input the whole name.\nIt can also display all users/guilds.\n\n" +
+                "**Usage**: `%s[search|looksfor|browse] [user|guild] <name>`\n\t\t\t  `%s[search|looksfor|browse] display [users|guilds]`\n\n**Permission level**: `1`", prefix, prefix);
     }
 }

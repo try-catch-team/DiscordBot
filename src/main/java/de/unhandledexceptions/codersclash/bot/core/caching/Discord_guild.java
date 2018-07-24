@@ -1,21 +1,21 @@
-package de.unhandledexceptions.codersclash.bot.core.Caching;
+package de.unhandledexceptions.codersclash.bot.core.caching;
 
 /**
  * @author Hax
  * @time 11:51 23.07.2018
  * @project codersclashunhandledexceptionsbot
- * @package de.unhandledexceptions.codersclash.bot.core.Caching
+ * @package de.unhandledexceptions.codersclash.bot.core.caching
  * @class Discord_guild
  **/
 
 public class Discord_guild {
 
-    int reports_until_ban;
-    boolean xp_system_activated;
-    String prefix;
-    long guild_id;
-    long mail_channel;
-    long auto_channel;
+    private int reports_until_ban;
+    private boolean xp_system_activated;
+    private String prefix;
+    private long guild_id;
+    private long mail_channel;
+    private long auto_channel;
 
     public Discord_guild(int reports_until_ban, boolean xp_system_activated, String prefix, long guild_id, long mail_channel, long auto_channel) {
         this.reports_until_ban = reports_until_ban;

@@ -39,21 +39,26 @@ public class InviteCommand implements ICommand {
             Messages.sendMessage(channel, Type.QUESTION, "What invite do you wish to get?\n\n\uD83E\uDD16 Give me the bot's invite!\n\uD83D\uDCE1 The invite for this guild!").queue((msg) -> {
                 List.of(Reactions.BOT, Reactions.SATTELITE, Reactions.NO_EMOTE).forEach((reaction) -> msg.addReaction(reaction).queue());
                 Reactions.newMenu(member.getUser(), msg, (reaction) -> {
-                    if (reaction.equals(Reactions.BOT)) {
-                        msg.clearReactions().queue();
-                        String botInvite = "[Click here!](" + event.getJDA().asBot().getInviteUrl(Permission.ADMINISTRATOR) + ")";
-                        var builder = new EmbedBuilder().addField("Invite me to your guild as well!\n", botInvite, true).setThumbnail(event.getJDA().getSelfUser().getAvatarUrl())
-                                .setColor(event.getGuild().getSelfMember().getColor()).setDescription("\uD83E\uDD16  **" + config.getBotName() + "**").setTitle("Bot Invite");
-                        msg.editMessage(builder.build()).queue();
-                    } else if (reaction.equals(Reactions.SATTELITE)) {
-                        msg.clearReactions().queue();
-                        channel.createInvite().queue((invite) -> {
-                            var builder = new EmbedBuilder().addField("Invite for this guild:", invite.getURL(), true).setThumbnail(event.getGuild().getIconUrl())
-                                    .setColor(event.getGuild().getSelfMember().getColor()).setDescription("\uD83D\uDCE1 **" + event.getGuild().getName() + "**").setTitle("Guild Invite");
+                    var builder = new EmbedBuilder();
+                    switch (reaction) {
+                        case Reactions.BOT:
+                            msg.clearReactions().queue();
+                            String botInvite = "[Click here!](" + event.getJDA().asBot().getInviteUrl(Permission.ADMINISTRATOR) + ")";
+                            builder.addField("Invite me to your guild as well!\n", botInvite, true).setThumbnail(event.getJDA().getSelfUser().getAvatarUrl())
+                                    .setColor(event.getGuild().getSelfMember().getColor()).setDescription("\uD83E\uDD16  **" + config.getBotName() + "**").setTitle("Bot Invite");
                             msg.editMessage(builder.build()).queue();
-                        });
-                    } else if (reaction.equals(Reactions.NO_EMOTE)) {
-                        msg.delete().queue();
+                            break;
+                        case Reactions.SATTELITE:
+                            msg.clearReactions().queue();
+                            channel.createInvite().queue((invite) -> {
+                                builder.addField("Invite for this guild:", invite.getURL(), true).setThumbnail(event.getGuild().getIconUrl())
+                                        .setColor(event.getGuild().getSelfMember().getColor()).setDescription("\uD83D\uDCE1 **" + event.getGuild().getName() + "**").setTitle("Guild Invite");
+                                msg.editMessage(builder.build()).queue();
+                            });
+                            break;
+                        case Reactions.NO_EMOTE:
+                            msg.delete().queue();
+                            break;
                     }
                 }, List.of(Reactions.BOT, Reactions.SATTELITE));
             });
@@ -67,12 +72,7 @@ public class InviteCommand implements ICommand {
 
     @Override
     public String info(Member member) {
-        int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 1
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `1`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : "**Description**: Opens the invite dialogue where you can choose between an invite for the bot or this guild.\n\n**Usage**: `" + Bot.getPrefix(member.getGuild().getIdLong())
+        return "**Description**: Opens the invite dialogue where you can choose between an invite for the bot or this guild.\n\n**Usage**: `" + Bot.getPrefix(member.getGuild().getIdLong())
                 + "invite`\n\n**Permission level**: `1`";
-        return ret;
     }
 }

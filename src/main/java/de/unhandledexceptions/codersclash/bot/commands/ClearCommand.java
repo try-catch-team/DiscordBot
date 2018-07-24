@@ -3,6 +3,7 @@ package de.unhandledexceptions.codersclash.bot.commands;
 import com.github.johnnyjayjay.discord.commandapi.CommandEvent;
 import com.github.johnnyjayjay.discord.commandapi.ICommand;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
+import de.unhandledexceptions.codersclash.bot.core.Main;
 import de.unhandledexceptions.codersclash.bot.core.Permissions;
 import de.unhandledexceptions.codersclash.bot.util.Messages.*;
 import de.unhandledexceptions.codersclash.bot.util.Regex;
@@ -31,7 +32,7 @@ public class ClearCommand implements ICommand {
         if (Permissions.getPermissionLevel(member) >= 4) { // Benötigtes Permission level überprüfen
             if (args.length == 1 && Regex.argsMatch(args, "[1-9]\\d{0,3}")) {
                 int amount = Integer.parseInt(args[0]);
-                event.getMessage().delete().queue((v) -> this.clear(channel, amount), defaultFailure(channel));
+                Main.otherThread(() -> event.getMessage().delete().queue((v) -> this.clear(channel, amount), defaultFailure(channel)));
             } else if (args.length == 1){
                 sendMessage(channel, Type.WARNING, format("`%s` is not a valid number!", args[0])).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
             } else {
@@ -76,11 +77,8 @@ public class ClearCommand implements ICommand {
     @Override
     public String info(Member member) {
         int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 4 ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: " +
-                "`4`\nYour permission level: `" + permLevel + "`"
-                : format("**Description**: Clears up to 9999 messages at a time. Though it is recommended to use it carefully. Deleting might take a while.\n\n" +
+        return format("**Description**: Clears up to 9999 messages at a time. Though it is recommended to use it carefully. Deleting might take a while.\n\n" +
                 "**Usage**: `%s[clear|clean|delete] <amount>` (amount must be a number between 1-9999)\n\n**Permission level**: `4`", Bot.getPrefix(member.getGuild().getIdLong()));
-        return ret;
     }
 }
 

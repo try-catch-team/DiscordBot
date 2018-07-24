@@ -1,10 +1,10 @@
-package de.unhandledexceptions.codersclash.bot.core.Caching;
+package de.unhandledexceptions.codersclash.bot.core.caching;
 
 /**
  * @author Hax
  * @time 11:55 23.07.2018
  * @project codersclashunhandledexceptionsbot
- * @package de.unhandledexceptions.codersclash.bot.core.Caching
+ * @package de.unhandledexceptions.codersclash.bot.core.caching
  * @class Discord_member
  **/
 

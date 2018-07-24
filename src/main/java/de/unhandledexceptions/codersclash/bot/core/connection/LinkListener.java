@@ -1,16 +1,14 @@
 package de.unhandledexceptions.codersclash.bot.core.connection;
 
-import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import static de.unhandledexceptions.codersclash.bot.util.Messages.Type;
-import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 
 /**
  * @author Johnny_JayJay
@@ -18,12 +16,9 @@ import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 public class LinkListener extends ListenerAdapter {
 
     private Set<Link> links;
-    private ShardManager shardManager;
     private LinkManager linkManager;
 
-    public LinkListener(ShardManager shardManager) {
-        this.shardManager = shardManager;
-        this.linkManager = linkManager;
+    public LinkListener() {
         this.links = new HashSet<>();
     }
 
@@ -39,10 +34,12 @@ public class LinkListener extends ListenerAdapter {
     @Override
     public void onTextChannelDelete(TextChannelDeleteEvent event) {
         Guild guild = event.getGuild();
+        List<Link> linksToRemoveFrom = new ArrayList<>();
         links.stream().filter((link) -> link.getGuilds().contains(guild.getIdLong())).forEach((link) -> {
             if (link.getLinkedChannel(guild) == event.getChannel().getIdLong())
-            linkManager.removeGuild(link, event.getGuild(), false);
+                linksToRemoveFrom.add(link);
         });
+        linksToRemoveFrom.forEach((link) -> linkManager.removeGuild(link, guild, false));
     }
 
     public void addLink(Link link) {
@@ -55,5 +52,9 @@ public class LinkListener extends ListenerAdapter {
 
     public boolean containsLink(Link link) {
         return links.contains(link);
+    }
+
+    public void setLinkManager(LinkManager linkManager) {
+        this.linkManager = linkManager;
     }
 }

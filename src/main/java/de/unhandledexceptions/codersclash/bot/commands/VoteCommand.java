@@ -11,10 +11,7 @@ import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageDeleteEvent;
@@ -59,10 +56,10 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args)
     {
-        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION))
             return;
 
-        if (Permissions.getPermissionLevel(member) < Permissions.getVotePermissionLevel()) {
+        if (Permissions.getPermissionLevel(member) < 4) {
             noPermissionsMessage(channel, member);
             return;
         }
@@ -109,16 +106,18 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
         }
 
 
-        sendMessage(channel, Type.SUCCESS, "Okay great! Let's create your vote!").queue();
-        sendStartInfoMessage(event);
+        Main.otherThread(() -> {
+            sendMessage(channel, Type.SUCCESS, "Okay great! Let's create your vote!").queue();
+            sendStartInfoMessage(event);
 
-        Vote vote = new Vote(guild, event.getChannel(), shardManager);
-        VoteCreator creator = new VoteCreator(member, guild, vote, VoteState.TIME, shardManager);
-        vote.setVoteCreator(creator);
-        votes.put(guild.getIdLong(), vote);
+            Vote vote = new Vote(guild, event.getChannel(), shardManager);
+            VoteCreator creator = new VoteCreator(member, guild, vote, VoteState.TIME, shardManager);
+            vote.setVoteCreator(creator);
+            votes.put(guild.getIdLong(), vote);
 
-        sendTimeReactionMessage(vote, event);
-        vote.getVoteCreator().setState(VoteState.REACTION);
+            sendTimeReactionMessage(vote, event);
+            vote.getVoteCreator().setState(VoteState.REACTION);
+        });
     }
 
     @Override
@@ -220,7 +219,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
             for (VoteAnswer answer : vote.getVoteAnswers()) {
                 if (answer.getAnswer().equals(event.getMessage().getContentRaw()))
                 {
-                    sendMessage(channel, Type.ERROR, "You already submit this possibility. Send a new one or finish the setup by typing 'finished'.").queue();
+                    sendMessage(channel, Type.ERROR, "You already submit this possibility. Send a new one or finish the setup by typing `finished`.").queue();
                     return;
                 }
             }
@@ -332,7 +331,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
                         "%s Time:\t\t\t%s %s\n" +
                         "%s Channel:\t\t<#%s>\n" +
                         "%s Votes per user:\t%s\n" +
-                        "%s Answer count:\t%s", reactions[0], vote.getTime(), vote.getTimeUnit().name().toLowerCase(), reactions[1], vote.getTargetChannelId(), reactions[2], vote.getVoteAnswers().size(), Reactions.USER, vote.getVotesPerUser());
+                        "%s Answer count:\t%s", reactions[0], vote.getTime(), vote.getTimeUnit().name().toLowerCase(), reactions[1], vote.getTargetChannelId(), Reactions.USER, vote.getVotesPerUser(), reactions[2], vote.getVoteAnswers().size());
 
         sendMessage(event.getChannel(), Type.INFO, voteStats, false).queue();
     }
@@ -347,7 +346,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
         var targetChannel = vote.getTargetChannel();
         var embedBuilder = new EmbedBuilder()
                 .setColor(vote.getGuild().getSelfMember().getColor())
-                .setTitle(Reactions.NEWSPAPER + " New vote!")
+                .setTitle(Reactions.NEWSPAPER + " New Vote!")
                 .setAuthor(vote.getVoteCreator().getMember().getEffectiveName(), null, vote.getVoteCreator().getMember().getUser().getEffectiveAvatarUrl())
                 .setFooter(format("Duration: %s %s -> End: %s", vote.getTime(), vote.getTimeUnit().name().toLowerCase(),
                         dateTimeFormatter.format(Instant.now().plus(vote.getTime(), vote.getTimeUnit().toChronoUnit()))), null)
@@ -414,26 +413,22 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
             File chartFile = new File(vote.getGuild().getName() + "_chart.jpeg");
 
-            try
-            {
+            try {
                 ChartUtils.saveChartAsJPEG(chartFile, chart.getChart(), WIDTH, HEIGHT);
-            } catch (IOException e)
-            {
+            } catch (IOException e) {
                 sendMessage(vote.getTargetChannel(), Type.ERROR, "Something went wrong while creating your file!").queue();
             }
 
-            sendMessage(vote.getTargetChannel(), Type.SUCCESS, "Your result has been created and will be posted within the next 10 seconds!").queue(Messages::deleteAfterFiveSec);
+            sendMessage(vote.getTargetChannel(), Type.SUCCESS, "Your result has been created and will be posted within the next `10` seconds!").queue(Messages::deleteAfterFiveSec);
 
-            vote.getTargetChannel().sendFile(chartFile).queueAfter(10, TimeUnit.SECONDS);
+            vote.getTargetChannel().sendFile(chartFile).queueAfter(10, TimeUnit.SECONDS, (f) -> chartFile.delete());
 
             votes.remove(vote.getGuildId());
-            chartFile.delete();
 
+            float total = 0;
 
-            int total = 0;
-
-            for (int i : reactionCount.values()) {
-                total = total + i;
+            for (float i : reactionCount.values()) {
+                Math.round(total = total + i);
             }
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -487,27 +482,16 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
             Vote vote = votes.get(event.getGuild().getIdLong());
 
-            if (vote.getEmotes().stream().noneMatch(name::equals)) {
-                event.getReaction().removeReaction(event.getUser()).queue();
+            User user = event.getUser();
+            if (event.getUser().isBot())
                 return;
+
+            if (vote.getEmotes().stream().noneMatch(name::equals)) {
+                event.getReaction().removeReaction(user).queue();
             } else {
-                vote.getMessage().queue(message -> {
-
-                    List<MessageReaction> reactions = message.getReactions();
-
-                    for (MessageReaction reaction : reactions) {
-                        reaction.getUsers().queue(users -> {
-
-                            int userVoted = 0;
-
-                            if (users.contains(event.getUser()))
-                                userVoted++;
-
-                            if (userVoted > vote.getVotesPerUser())
-                                event.getReaction().removeReaction().queue();
-                        });
-                    }
-                });
+                vote.addUserVoted(user);
+                if (Collections.frequency(vote.getUsersVoted(), user.getIdLong()) > vote.getVotesPerUser())
+                    event.getReaction().removeReaction(user).queue();
             }
         }
     }
@@ -524,12 +508,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 4
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `4`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : format("**Description**: Creates a vote and evaluates it\ninto a percentage value and a piechart.\nIf you desire you can close the vote early.\n\n" +
+        return format("**Description**: Creates a vote and evaluates it\ninto a percentage value and a piechart.\nIf you desire you can close the vote early.\n\n" +
                 "**Usage**: `%s[vote|poll]`\n\t\t\t  `%s[vote|poll] close`\n\n**Permission level**: `4`", prefix, prefix);
-        return ret;
     }
 }

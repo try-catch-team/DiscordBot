@@ -21,7 +21,7 @@ public class BlockCommand implements ICommand {
 
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
-        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE) || !event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS))
             return;
 
         if (Permissions.getPermissionLevel(member) >= 2) {
@@ -52,11 +52,6 @@ public class BlockCommand implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 2
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `2`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : format("**Description**: Denies permission for a specific user in a specific channel.\n\n**Usage**: `%s[block|deny] @Member #Channel <reason>`\n\n**Permission level**: `2`", prefix);
-        return ret;
+        return format("**Description**: Denies permission for a specific user in a specific channel.\n\n**Usage**: `%s[block|deny] @Member #Channel <reason>`\n\n**Permission level**: `2`", prefix);
     }
 }

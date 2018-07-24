@@ -40,10 +40,10 @@ public class MailCommand implements ICommand {
 
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
-        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION))
             return;
 
-        if (Permissions.getPermissionLevel(member) >= 4) {
+        if (Permissions.getPermissionLevel(member) >= 2) {
             if (args.length > 1) {
                 var shardManager = event.getJDA().asBot().getShardManager();
                 Guild guild;
@@ -86,14 +86,18 @@ public class MailCommand implements ICommand {
                         .setFooter("Inbox", null)
                         .setTimestamp(Instant.now())
                         .addField(topic, content, false);
-                mailChannel.sendMessage(builder.build()).queue(
-                        (msg) -> sendMessage(channel, Type.SUCCESS, "Mail sent!").queue(),
-                        defaultFailure(channel));
+                if (guild.getSelfMember().hasPermission(mailChannel, Permission.MESSAGE_WRITE)) {
+                    mailChannel.sendMessage(builder.build()).queue(
+                            (msg) -> sendMessage(channel, Type.SUCCESS, "Mail sent!").queue(),
+                            defaultFailure(channel));
+                } else {
+                    sendMessage(channel, Type.ERROR, "I can't send a mail to guild `" + guild + "`, because I have no permissions to do that!").queue();
+                }
             } else {
-                sendMessage(channel, Type.ERROR, "I can't send a mail to `" + guild.getName() + "`, it seems like they deleted their mail channel!").queue();
+                sendMessage(channel, Type.ERROR, "I can't send a mail to `" + guild + "`, it seems like they deleted their mail channel!").queue();
             }
         } else {
-            sendMessage(channel, Type.ERROR, "The guild `" + guild.getName() + "` hasn't set a mail channel! Contact their administrators.").queue();
+            sendMessage(channel, Type.ERROR, "The guild `" + guild + "` hasn't set a mail channel! Contact their administrators.").queue();
         }
     }
 
@@ -124,14 +128,10 @@ public class MailCommand implements ICommand {
 
     @Override
     public String info(Member member) {
-        int permLevel = Permissions.getPermissionLevel(member);
-        String ret = permLevel < 4 ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: " +
-                "`4`\nYour permission level: `" + permLevel + "`"
-                : "**Description:** Send a \"mail\" to a guild the bot is also on!\n\n"
+        return "**Description:** Send a \"mail\" to a guild the bot is also on!\n\n"
                 + "**Usage:** `" + Bot.getPrefix(member.getGuild().getIdLong()) + "[mail|contact] <Guild-ID> <Message>`\nIf you don't have an id, replace it with \"NOID\". "
                 + "You may then search a guild by name.\nTo add a topic to your mail, put `##your-topic##` somewhere "
                 + "(replace \"your-topic\" with the topic you want).\nThis *only* works if the other guild has set a mail channel.\n\n"
-                + "**Permission Level:** `4`";
-        return ret;
+                + "**Permission Level:** `2`";
     }
 }

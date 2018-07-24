@@ -14,6 +14,7 @@ import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 
 import java.util.*;
@@ -55,6 +56,9 @@ public class LinkCommand implements ICommand {
 
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_MANAGE))
+            return;
+
         if (Permissions.getPermissionLevel(member) < 4) {
             noPermissionsMessage(channel, member);
             return;
@@ -306,10 +310,7 @@ public class LinkCommand implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        int permLvl = Permissions.getPermissionLevel(member);
-        return permLvl < 4 ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: " +
-                "`4`\nYour permission level: `" + permLvl + "`"
-                : format("**Description:** Links your guild with up to 9 other guilds with a channel.\n\n**Usage**: `%slink [request|accept|disconnect]`\n`%slink invite <guildname>`Note that " +
+        return format("**Description:** Links your guild with up to 9 other guilds with a channel.\n\n**Usage**: `%slink [request|accept|disconnect]`\n`%slink invite <guildname>`Note that " +
                 "you may only use `invite` and `disconnect` if you're currently connected.\n\n A guild may only have one link or one request " +
                 "at a time. As soon as you request a link, your guild is linked.\nIn order to send a new request, you need to " +
                 "disconnect first.\n\n**Permission level:** `4`", prefix, prefix);

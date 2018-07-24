@@ -34,6 +34,11 @@ public class ReportCommand implements ICommand {
         if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
             return;
 
+        if (Permissions.getPermissionLevel(member) < 3) {
+            noPermissionsMessage(channel, member);
+            return;
+        }
+
         if (args.length >= 2 && event.getCommand().getJoinedArgs().matches("(?i)(<@!?\\d+> .+)|((get|remove) <@!?\\d+>( (10|[1-9]))?)") && !event.getMessage().getMentionedMembers().isEmpty()) {
             var target = event.getMessage().getMentionedMembers().get(0);
             List<String> reportList = database.getReports(target);
@@ -118,22 +123,14 @@ public class ReportCommand implements ICommand {
     @Override
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-        int permLevel = Permissions.getPermissionLevel(member);
-        String retNoBan = permLevel < 3
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `3`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : format("**Description**: Reports a given member. A member will not be banned after a certain amount of report. To change this, make use of the settings command.\n\n" +
+        String retNoBan = format("**Description**: Reports a given member. A member will not be banned after a certain amount of report. To change this, make use of the settings command.\n\n" +
                         "**Usage**: `%s[report|rep] @Member <reason>` to *report* \n\t\t\t  `%s[rep|report] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
                         "level**: `3`",
                 prefix, prefix);
-        String retWithBan = permLevel < 3
-                ? "Sorry, but you do not have permission to execute this command, so command help won't help you either :( \nRequired permission level: `3`\nYour permission " +
-                "level: `" + permLevel + "`"
-                : format("**Description**: Reports a given member. After `%d` reports, a member will be banned. To change this, make use of the settings command.\n\n" +
+        String retWithBan = format("**Description**: Reports a given member. After `%d` reports, a member will be banned. To change this, make use of the settings command.\n\n" +
                         "**Usage**: `%s[report|rep] @Member <reason>` to *report* \n\t\t\t  `%s[rep|report] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
                         "level**: `3`",
                 database.getReportsUntilBan(member.getGuild()), prefix, prefix);
-        String ret = (database.getReportsUntilBan(member.getGuild()) == (11)) ? retNoBan : retWithBan;
-        return ret;
+        return (database.getReportsUntilBan(member.getGuild()) == (11)) ? retNoBan : retWithBan;
     }
 }

@@ -2,7 +2,6 @@ package de.unhandledexceptions.codersclash.bot.core;
 
 import com.github.johnnyjayjay.discord.commandapi.CommandSettings;
 import de.unhandledexceptions.codersclash.bot.commands.*;
-import de.unhandledexceptions.codersclash.bot.core.Caching.Caching;
 import de.unhandledexceptions.codersclash.bot.core.connection.LinkListener;
 import de.unhandledexceptions.codersclash.bot.core.connection.LinkManager;
 import de.unhandledexceptions.codersclash.bot.core.mute.MuteManager;
@@ -28,9 +27,7 @@ public class Bot {
     private List<Object> listeners;
     private DefaultShardManagerBuilder builder;
     private ShardManager shardManager;
-    private  Caching caching;
     private static CommandSettings commandSettings;
-    private static ReportCommand reportCommand;
 
     private static Logger logger = Logging.getLogger();
 
@@ -42,8 +39,7 @@ public class Bot {
         this.listeners = new ArrayList<>();
     }
 
-    void start() {
-
+    public void start() {
         builder.setAutoReconnect(true)
                 .setGame(Game.listening("@" + config.getBotName() + " | Ping me!"))
                 .setToken(config.getToken());
@@ -56,34 +52,36 @@ public class Bot {
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e1) {
-                    logger.error("Error while reloading...", e1);
                 }
                 this.start();
             } else {
                 logger.error("Login failed after 3 times. Exiting the program");
                 Runtime.getRuntime().exit(1);
             }
-        }
 
+        }
         commandSettings = new CommandSettings(config.getPrefix(), this.shardManager, true);
         logger.info("CommandSettings are being configured");
-
-        this.caching = new Caching(database, this);
 
         // Command settings einstellen
         database.getPrefixes().forEach((id, prefix) -> commandSettings.setCustomPrefix(id, prefix));
 
-        var xpCommand = new XPCommand(commandSettings, caching);
-        var linkListener = new LinkListener(shardManager);
+        var xpCommand = new XPCommand(commandSettings, database);
+        var linkListener = new LinkListener();
+        var linkManager = new LinkManager(shardManager);
+        linkListener.setLinkManager(linkManager);
+        linkManager.setLinkListener(linkListener);
 
         var voteCommand = new VoteCommand(shardManager);
         var ticTacToe = new TicTacToe();
         var searchCommand = new SearchCommand();
         var mailCommand = new MailCommand(database, searchCommand);
-        var linkCommand = new LinkCommand(new LinkManager(shardManager), linkListener, searchCommand, mailCommand, database);
+        ReportCommand reportCommand = new ReportCommand(database);
+        var linkCommand = new LinkCommand(linkManager, linkListener, searchCommand, mailCommand, database);
         var muteManager = new MuteManager(shardManager, commandSettings);
 
         CommandSettingsHandler commandSettingsHandler = new CommandSettingsHandler(commandSettings);
+
         commandSettingsHandler
                 .put(new BlockCommand(), "block", "deny")
                 .put(new ClearCommand(), "clear", "clean", "delete")
@@ -95,7 +93,7 @@ public class Bot {
                 .put(new MuteCommand(muteManager), "mute", "silence")
                 .put(new Permissions(commandSettings, database), "permission", "perms", "perm")
                 .put(new ProfileCommand(reportCommand), "profile", "userinfo")
-                .put(new ReportCommand(database), "report", "rep", "reports")
+                .put(reportCommand, "report", "rep", "reports")
                 .put(new RoleCommand(), "role")
                 .put(new ScoreBoardCommand(database, commandSettings), "scoreboard", "sb")
                 .put(searchCommand, "search", "lookfor", "browse")
@@ -103,14 +101,12 @@ public class Bot {
                 .put(new TicTacToeCommand(ticTacToe), "ttt", "tictactoe")
                 .put(voteCommand, "vote", "poll")
                 .put(xpCommand, "xp", "level", "lvl")
-                .put(new CachingControlCommand(this.caching), "cache")
-                .put(new CheckpermsCommand(), "checkperms")
                 .getCommandSettings()
-                .setCooldown(3000)
+                .setCooldown(config.getCommandCooldown())
                 .activate();
 
         listeners.addAll(List.of(voteCommand, xpCommand, new DatabaseListener(database, shardManager), new MentionListener(config),
-                new ReadyListener(config, database, this), new Management(this), linkListener, new AutoChannelListener(database)));
+                new ReadyListener(config), new Management(this), linkListener, new AutoChannelListener(database)));
         listeners.forEach(shardManager::addEventListener);
     }
 
@@ -163,8 +159,4 @@ public class Bot {
     }
 
     public static String getBotName(){return config.getBotName();}
-
-    public Caching getCaching() {
-        return caching;
-    }
 }

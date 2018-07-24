@@ -1,15 +1,12 @@
-package de.unhandledexceptions.codersclash.bot.core.Caching;
+package de.unhandledexceptions.codersclash.bot.core.caching;
 
-import com.github.johnnyjayjay.discord.commandapi.CommandEvent;
-import com.github.johnnyjayjay.discord.commandapi.ICommand;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.TextChannel;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Hax
@@ -23,12 +20,12 @@ public class Caching {
 
     private static Logger logger = Logging.getLogger();
 
-    Database database;
-    Bot bot;
+    private Database database;
+    private Bot bot;
 
-    HashMap<Long, Discord_guild> guilds;
-    HashMap<String, Discord_member> member;
-    HashMap<Long, Discord_user> user;
+    private Map<Long, Discord_guild> guilds;
+    private Map<String, Discord_member> member;
+    private Map<Long, Discord_user> user;
 
     public Caching(Database database, Bot bot) {
         this.database = database;
@@ -52,15 +49,15 @@ public class Caching {
         return this;
     }
 
-    public HashMap<Long, Discord_guild> getGuilds() {
+    public Map<Long, Discord_guild> getGuilds() {
         return guilds;
     }
 
-    public HashMap<String, Discord_member> getMember() {
+    public Map<String, Discord_member> getMember() {
         return member;
     }
 
-    public HashMap<Long, Discord_user> getUser() {
+    public Map<Long, Discord_user> getUser() {
         return user;
     }
 

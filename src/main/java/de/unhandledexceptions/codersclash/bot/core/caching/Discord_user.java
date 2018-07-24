@@ -1,18 +1,18 @@
-package de.unhandledexceptions.codersclash.bot.core.Caching;
+package de.unhandledexceptions.codersclash.bot.core.caching;
 
 /**
  * @author Hax
  * @time 11:58 23.07.2018
  * @project codersclashunhandledexceptionsbot
- * @package de.unhandledexceptions.codersclash.bot.core.Caching
+ * @package de.unhandledexceptions.codersclash.bot.core.caching
  * @class Discord_user
  **/
 
 public class Discord_user {
 
-    long user_id;
-    int user_xp;
-    int user_lvl;
+    private long user_id;
+    private int user_xp;
+    private int user_lvl;
 
     public Discord_user(long user_id, int user_xp, int user_lvl) {
         this.user_id = user_id;

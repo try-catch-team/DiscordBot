@@ -3,10 +3,8 @@ package de.unhandledexceptions.codersclash.bot.commands;
 import com.github.johnnyjayjay.discord.commandapi.CommandEvent;
 import com.github.johnnyjayjay.discord.commandapi.CommandSettings;
 import com.github.johnnyjayjay.discord.commandapi.ICommand;
-import de.unhandledexceptions.codersclash.bot.core.Caching.Caching;
-import de.unhandledexceptions.codersclash.bot.core.Caching.Discord_guild;
-import de.unhandledexceptions.codersclash.bot.core.Caching.Discord_member;
-import de.unhandledexceptions.codersclash.bot.core.Caching.Discord_user;
+import de.unhandledexceptions.codersclash.bot.core.Database;
+import de.unhandledexceptions.codersclash.bot.core.Permissions;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Emote;
@@ -24,8 +22,7 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-import static de.unhandledexceptions.codersclash.bot.util.Messages.Type;
-import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
+import static de.unhandledexceptions.codersclash.bot.util.Messages.*;
 import static java.lang.String.format;
 
 public class XPCommand extends ListenerAdapter implements ICommand {
@@ -34,17 +31,21 @@ public class XPCommand extends ListenerAdapter implements ICommand {
 
 
     private CommandSettings settings;
-    private Caching caching;
+    private Database database;
 
-    public XPCommand(CommandSettings settings, Caching caching) {
+    public XPCommand(CommandSettings settings, Database database) {
         this.settings = settings;
-        this.caching = caching;
+        this.database = database;
     }
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
 
         if (!event.getGuild().getSelfMember().hasPermission(Permission.MESSAGE_WRITE))
             return;
+
+        if (Permissions.getPermissionLevel(member) < 1) {
+            noPermissionsMessage(channel, member);
+        }
 
         if (event.getMessage().getMentionedMembers().size()==1) {
             member = event.getMessage().getMentionedMembers().get(0);
@@ -55,18 +56,14 @@ public class XPCommand extends ListenerAdapter implements ICommand {
             return;
         }
 
-        Discord_member discord_member = caching.getMember().get(member.getUser().getIdLong()+" "+member.getGuild().getIdLong());
-        Discord_user discord_user = caching.getUser().get(member.getUser().getIdLong());
-        Discord_guild discord_guild = caching.getGuilds().get(member.getGuild().getIdLong());
-
-        long memberXp = discord_member.getMember_xp();
-        long userXp = discord_user.getUser_id();
-        long memberLevel = discord_member.getMember_lvl();
-        long userLevel = discord_user.getUser_lvl();
+        long memberXp = database.getGuildXp(member);
+        long userXp = database.getUserXp(member.getUser());
+        long memberLevel = database.getGuildLvl(member);
+        long userLevel = database.getUserLvl(member.getUser());
         long maxUserXp = userLevel * multiplicator;
         long maxMemberXp = memberLevel * multiplicator;
 
-        if (!discord_guild.isXp_system_activated()) {
+        if (!database.xpSystemActivated(event.getGuild().getIdLong())) {
             sendMessage(channel, Type.WARNING, format("The XP-System is currently `deactivated`.\nUse `%ssettings` to re-enable it or contact your Server Admins.",
                     settings.getPrefix(member.getGuild().getIdLong()))).queue((msg) -> msg.delete().queueAfter(25, TimeUnit.SECONDS));
         } else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_EMOTES)) {
@@ -89,33 +86,25 @@ public class XPCommand extends ListenerAdapter implements ICommand {
 
     @Override
     public String info(Member member) {
-        return format("**Description**: Gives you information about your level.\n\n**Usage**: `%s[xp|lvl|level]`\n\n**Permission level**: `0`",
-                settings.getPrefix(member.getGuild().getIdLong()));
+        String prefix = settings.getPrefix(member.getGuild().getIdLong());
+        return format("**Description**: Gives you information about your level.\n\n**Usage**: `%s[xp|lvl|level]`\n\n**Permission level**: `1`", prefix);
     }
 
     @Override
     public void onGenericGuildMessage(GenericGuildMessageEvent origevent) {
-        if (origevent instanceof GuildMessageDeleteEvent || !caching.getGuilds().get(origevent.getGuild().getIdLong()).isXp_system_activated())
+        if (origevent instanceof GuildMessageDeleteEvent || !database.xpSystemActivated(origevent.getGuild().getIdLong()))
             return;
         if (origevent instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent event = (GuildMessageReactionAddEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
-                if (!msg.getAuthor().isBot()) {
-                    Discord_user discord_user = caching.getUser().get(event.getMember().getUser().getIdLong());
-                    Discord_member discord_member = caching.getMember().get(event.getMember().getUser().getIdLong() + " " + event.getGuild().getIdLong());
-                    discord_user.setUser_xp(discord_user.getUser_xp() + 1);
-                    discord_member.setMember_xp(discord_member.getMember_xp() + 1);
-                }
+                if (!msg.getAuthor().isBot())
+                    database.addXp(msg.getMember(), 1);
             }, (msg) -> {});
         } else if (origevent instanceof GuildMessageReactionRemoveEvent) {
             GuildMessageReactionRemoveEvent event = (GuildMessageReactionRemoveEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
-                if (!msg.getAuthor().isBot()) {
-                    Discord_user discord_user = caching.getUser().get(event.getMember().getUser().getIdLong());
-                    Discord_member discord_member = caching.getMember().get(event.getMember().getUser().getIdLong() + " " + event.getGuild().getIdLong());
-                    discord_user.setUser_xp(discord_user.getUser_xp() - 1);
-                    discord_member.setMember_xp(discord_member.getMember_xp() - 1);
-                }
+                if (!msg.getAuthor().isBot())
+                    database.removeXp(msg.getMember(), 1);
             }, (msg) -> {});
         } else if (origevent instanceof GuildMessageReceivedEvent) {
             GuildMessageReceivedEvent event = (GuildMessageReceivedEvent) origevent;
@@ -130,10 +119,8 @@ public class XPCommand extends ListenerAdapter implements ICommand {
                         result = ThreadLocalRandom.current().nextInt(length - 10) + 10;
                     else
                         result = ThreadLocalRandom.current().nextInt(length);
-                    Discord_user discord_user = caching.getUser().get(event.getMember().getUser().getIdLong());
-                    Discord_member discord_member = caching.getMember().get(event.getMember().getUser().getIdLong()+" "+event.getGuild().getIdLong());
-                    discord_user.setUser_xp(discord_user.getUser_xp()+result);
-                    discord_member.setMember_xp(discord_member.getMember_xp()+result);
+
+                    database.addXp(event.getMember(), result);
                 }
             }
         }
@@ -185,15 +172,11 @@ public class XPCommand extends ListenerAdapter implements ICommand {
     }
 
     private void checkLvl(Member member) {
-        Discord_user discord_user = caching.getUser().get(member.getUser().getIdLong());
-        Discord_member discord_member = caching.getMember().get(member.getUser().getIdLong()+" "+member.getGuild().getIdLong());
-        if (discord_user.getUser_xp()>=(discord_user.getUser_lvl() * multiplicator)) {
-            discord_user.setUser_lvl(discord_user.getUser_lvl()+1);
-            discord_user.setUser_xp(0);
+        if (database.getUserXp(member.getUser())>=(database.getUserLvl(member.getUser())) * multiplicator) {
+            database.addUserLvl(member.getUser());
         }
-        if (discord_member.getMember_xp()>=discord_member.getMember_xp() * multiplicator) {
-            discord_member.setMember_xp(discord_member.getMember_lvl()+1);
-            discord_member.setMember_xp(0);
+        if (database.getGuildXp(member)>=(database.getGuildLvl(member) * multiplicator)) {
+            database.addGuildLvl(member);
         }
     }
 }

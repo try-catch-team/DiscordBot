@@ -4,6 +4,7 @@ import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.collections4.set.ListOrderedSet;
 
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class Vote {
 
     private List<VoteAnswer> voteAnswers;
+    private List<Long> usersVoted;
     private VoteCreator voteCreator;
     private long setupChannelId, targetChannelId, guildId, messageId;
     private long time;
@@ -35,11 +37,13 @@ public class Vote {
 
     public Vote(Guild guild, TextChannel setupChannel, ShardManager shardManager)
     {
+        this.usersVoted = new ArrayList<>();
         this.emotes = new ListOrderedSet<>();
         this.voteAnswers = new ArrayList<>();
         this.guildId = guild.getIdLong();
         this.setupChannelId = setupChannel.getIdLong();
         this.shardManager = shardManager;
+        usersVoted = new ArrayList<>();
     }
 
     public void setTargetChannel(TextChannel targetChannel)
@@ -207,9 +211,13 @@ public class Vote {
         this.votesPerUser = votesPerUser;
     }
 
-    public boolean isRunning()
-    {
+    public void addUserVoted(User user) {
+        usersVoted.add(user.getIdLong());
+    }
 
+    public List<Long> getUsersVoted() {return usersVoted;}
+
+    public boolean isRunning() {
         if (scheduledFuture == null)
             return false;
 
