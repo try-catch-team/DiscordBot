@@ -32,7 +32,7 @@ public class Main {
                     "has to be a String!");
         } else {
             logger.info("Database is being set up!");
-            var database = new Database(config.getDBIp(), config.getDBPort(), config.getDBName(), config.getDBUsername(), config.getDBPassword());
+            var database = new Database(config);
             database.connect();
             logger.info("Connected to Database. Checking tables...");
             database.createTablesIfNotExist();

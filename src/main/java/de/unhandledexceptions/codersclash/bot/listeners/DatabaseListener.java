@@ -91,12 +91,12 @@ public class DatabaseListener extends ListenerAdapter {
 
     private synchronized void refreshDatabase() {
         logger.warn("Database is being refreshed...");
-        List<Long> expectedGuilds = database.getIds("discord_guild");
+        List<Long> expectedGuilds = database.getIds("Discord_guild");
         logger.debug("Expected guilds: " + expectedGuilds);
         List<Long> actualGuilds =  shardManager.getGuildCache().stream().map(Guild::getIdLong).collect(Collectors.toList());
         logger.debug("Actual guilds: " + actualGuilds);
         expectedGuilds.stream().filter((id) -> !actualGuilds.contains(id)).forEach(database::deleteGuild);
-        List<Long> expectedUsers = database.getIds("discord_user");
+        List<Long> expectedUsers = database.getIds("Discord_user");
         logger.debug("Expected users: " + expectedUsers);
         List<Long> actualUsers = shardManager.getUserCache().stream().map(User::getIdLong).collect(Collectors.toList());
         logger.debug("Actual users: " + actualUsers);

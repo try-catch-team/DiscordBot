@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.requests.RestAction;
 
 import java.util.Collection;
 import java.util.Set;
@@ -221,14 +222,20 @@ public class Reactions {
             if (user == event.getJDA().getSelfUser() || event.getMessageIdLong() != messageId)
                 return;
 
-            event.getReaction().removeReaction(user).queue( placeholder -> {}, placeholder -> {});
-
             String emoji = event.getReactionEmote().getName();
+            boolean contains = emojis.contains(emoji);
+            RestAction<Void> removeReaction = event.getReaction().removeReaction(user);
+
+            if (!contains) {
+                removeReaction.queue();
+            }
+
             if (user.getIdLong() == userId) {
                 if (emoji.equals(NO_EMOTE)) {
                     event.getJDA().removeEventListener(this);
                 }
-                if (emojis.contains(emoji)) {
+                if (contains) {
+                    removeReaction.queue();
                     reacted.accept(emoji);
                     if (removeListener)
                         event.getJDA().removeEventListener(this);

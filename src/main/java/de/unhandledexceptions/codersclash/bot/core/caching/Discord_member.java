@@ -10,12 +10,12 @@ package de.unhandledexceptions.codersclash.bot.core.caching;
 
 public class Discord_member {
 
-    long member_id;
-    long guild_id;
-    long user_id;
-    int member_xp;
-    int member_lvl;
-    int permission_lvl;
+    private long member_id;
+    private long guild_id;
+    private long user_id;
+    private int member_xp;
+    private int member_lvl;
+    private int permission_lvl;
 
     public Discord_member(long member_id, long guild_id, long user_id, int member_xp, int member_lvl, int permission_lvl) {
         this.member_id = member_id;

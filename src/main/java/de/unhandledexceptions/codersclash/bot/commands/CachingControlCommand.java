@@ -34,25 +34,22 @@ public class CachingControlCommand implements ICommand {
         if (!Bot.getBotOwners().contains(member.getUser().getIdLong()))
             return;
 
-        Discord_member memberObject = caching.getMember().get(member.getUser().getIdLong()+ " "+ member.getGuild().getIdLong());
-        if (memberObject.getPermission_lvl()>=5) {
-            if (args.length>0) {
-                if (args.length==1) {
-                    switch (args[0].toLowerCase()) {
-                        case "read":
-                            sendMessage(channel, Messages.Type.WARNING, "Reading DB...", "caching", true).queue();
-                            caching.readall();
-                            sendMessage(channel, Messages.Type.SUCCESS, "Readed DB!", "caching", true).queue();
-                            break;
-                        case "updatedb":
-                            sendMessage(channel, Messages.Type.WARNING, "Updating DB...", "caching", true).queue();
-                            caching.updateDB();
-                            sendMessage(channel, Messages.Type.SUCCESS, "Updated DB!", "caching", true).queue();
-                            break;
-                    }
+        if (args.length>0) {
+            if (args.length==1) {
+                switch (args[0].toLowerCase()) {
+                    case "read":
+                        sendMessage(channel, Messages.Type.WARNING, "Reading DB...", "caching", true).queue();
+                        caching.readall();
+                        sendMessage(channel, Messages.Type.SUCCESS, "Readed DB!", "caching", true).queue();
+                        break;
+                    case "updatedb":
+                        sendMessage(channel, Messages.Type.WARNING, "Updating DB...", "caching", true).queue();
+                        caching.updateDB();
+                        sendMessage(channel, Messages.Type.SUCCESS, "Updated DB!", "caching", true).queue();
+                        break;
                 }
-            } else wrongUsageMessage(channel, member, this);
-        } else noPermissionsMessage(channel, member);
+            }
+        } else wrongUsageMessage(channel, member, this);
     }
 
     @Override

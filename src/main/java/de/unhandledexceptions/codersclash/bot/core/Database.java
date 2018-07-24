@@ -39,12 +39,12 @@ public class Database {
 
     private String ip, username, password, dbname, port;
 
-    public Database(String ip, String port, String dbname, String username, String password, Config botConfig) {
-        this.ip = ip;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.dbname = dbname;
+    public Database(Config botConfig) {
+        this.ip = botConfig.getDBIp();
+        this.port = botConfig.getDBPort();
+        this.username = botConfig.getDBUsername();
+        this.password = botConfig.getDBPassword();
+        this.dbname = botConfig.getDBName();
         this.botConfig = botConfig;
     }
 
