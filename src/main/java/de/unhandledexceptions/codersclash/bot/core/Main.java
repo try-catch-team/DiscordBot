@@ -3,6 +3,8 @@ package de.unhandledexceptions.codersclash.bot.core;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
 import org.slf4j.Logger;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -39,6 +41,18 @@ public class Main {
             Bot bot = new Bot(config, database);
             bot.start();
             logger.info("Bot has been started!");
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    bot.getCaching().readall();
+                }
+            }, 1000);
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    bot.getCaching().updateDB();
+                }
+            }, 300000, 300000);
         }
     }
 

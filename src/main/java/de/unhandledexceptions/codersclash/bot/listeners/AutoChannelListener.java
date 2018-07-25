@@ -1,5 +1,6 @@
 package de.unhandledexceptions.codersclash.bot.listeners;
 
+import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
 import net.dv8tion.jda.core.Permission;
@@ -23,17 +24,17 @@ import static java.lang.String.format;
 
 public class AutoChannelListener extends ListenerAdapter {
 
-    private Database database;
     private Set<VoiceChannel> channels = new HashSet<>();
+    private Bot bot;
 
-    public AutoChannelListener(Database database) {
-        this.database = database;
+    public AutoChannelListener(Bot bot) {
+        this.bot = bot;
     }
 
     @Override
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         var joined = event.getChannelJoined();
-        if (joined.getIdLong() == database.getAutoChannel(event.getGuild()))
+        if (joined.getIdLong() == bot.getCaching().getGuilds().get(event.getGuild().getIdLong()).getAuto_channel())
             createChannel(joined, event.getGuild(), event.getMember());
     }
 
@@ -54,7 +55,7 @@ public class AutoChannelListener extends ListenerAdapter {
         var joined = event.getChannelJoined();
         if (channels.contains(left) && left.getMembers().isEmpty())
             left.delete().queue((v) -> channels.remove(left));
-        if (joined.getIdLong() == database.getAutoChannel(event.getGuild()))
+        if (joined.getIdLong() == bot.getCaching().getGuilds().get(event.getGuild().getIdLong()).getAuto_channel())
             createChannel(joined, event.getGuild(), event.getMember());
     }
 

@@ -3,8 +3,12 @@ package de.unhandledexceptions.codersclash.bot.commands;
 import com.github.johnnyjayjay.discord.commandapi.CommandEvent;
 import com.github.johnnyjayjay.discord.commandapi.CommandSettings;
 import com.github.johnnyjayjay.discord.commandapi.ICommand;
+import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.core.Permissions;
+import de.unhandledexceptions.codersclash.bot.core.caching.Discord_guild;
+import de.unhandledexceptions.codersclash.bot.core.caching.Discord_member;
+import de.unhandledexceptions.codersclash.bot.core.caching.Discord_user;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Emote;
@@ -27,15 +31,15 @@ import static java.lang.String.format;
 
 public class XPCommand extends ListenerAdapter implements ICommand {
 
-    private static final long multiplicator = 8;
+    private static final long multiplicator = 32;
 
 
     private CommandSettings settings;
-    private Database database;
+    private Bot bot;
 
-    public XPCommand(CommandSettings settings, Database database) {
+    public XPCommand(CommandSettings settings, Bot bot) {
         this.settings = settings;
-        this.database = database;
+        this.bot = bot;
     }
     @Override
     public void onCommand(CommandEvent event, Member member, TextChannel channel, String[] args) {
@@ -56,14 +60,18 @@ public class XPCommand extends ListenerAdapter implements ICommand {
             return;
         }
 
-        long memberXp = database.getGuildXp(member);
-        long userXp = database.getUserXp(member.getUser());
-        long memberLevel = database.getGuildLvl(member);
-        long userLevel = database.getUserLvl(member.getUser());
+        Discord_guild guild = bot.getCaching().getGuilds().get(member.getGuild().getIdLong());
+        Discord_member discord_member = bot.getCaching().getMember().get(member.getUser().getIdLong()+" "+member.getGuild().getIdLong());
+        Discord_user discord_user = bot.getCaching().getUser().get(member.getUser().getIdLong());
+
+        long memberXp = discord_member.getMember_xp();
+        long userXp = discord_user.getUser_xp();
+        long memberLevel = discord_member.getMember_lvl();
+        long userLevel = discord_user.getUser_lvl();
         long maxUserXp = userLevel * multiplicator;
         long maxMemberXp = memberLevel * multiplicator;
 
-        if (!database.xpSystemActivated(event.getGuild().getIdLong())) {
+        if (!guild.isXp_system_activated()) {
             sendMessage(channel, Type.WARNING, format("The XP-System is currently `deactivated`.\nUse `%ssettings` to re-enable it or contact your Server Admins.",
                     settings.getPrefix(member.getGuild().getIdLong()))).queue((msg) -> msg.delete().queueAfter(25, TimeUnit.SECONDS));
         } else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_EMOTES)) {
@@ -92,19 +100,27 @@ public class XPCommand extends ListenerAdapter implements ICommand {
 
     @Override
     public void onGenericGuildMessage(GenericGuildMessageEvent origevent) {
-        if (origevent instanceof GuildMessageDeleteEvent || !database.xpSystemActivated(origevent.getGuild().getIdLong()))
+        if (origevent instanceof GuildMessageDeleteEvent || !bot.getCaching().getGuilds().get(origevent.getGuild().getIdLong()).isXp_system_activated())
             return;
         if (origevent instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent event = (GuildMessageReactionAddEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
-                if (!msg.getAuthor().isBot())
-                    database.addXp(msg.getMember(), 1);
+                if (!msg.getAuthor().isBot()) {
+                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getMember().getUser().getIdLong());
+                    Discord_user discord_user = bot.getCaching().getUser().get(msg.getMember().getUser().getIdLong());
+                    discord_member.setMember_xp(discord_member.getMember_xp()+1);
+                    discord_user.setUser_xp(discord_user.getUser_xp()+1);
+                }
             }, (msg) -> {});
         } else if (origevent instanceof GuildMessageReactionRemoveEvent) {
             GuildMessageReactionRemoveEvent event = (GuildMessageReactionRemoveEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
-                if (!msg.getAuthor().isBot())
-                    database.removeXp(msg.getMember(), 1);
+                if (!msg.getAuthor().isBot()) {
+                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getMember().getUser().getIdLong());
+                    Discord_user discord_user = bot.getCaching().getUser().get(msg.getMember().getUser().getIdLong());
+                    discord_member.setMember_xp(discord_member.getMember_xp()-1);
+                    discord_user.setUser_xp(discord_user.getUser_xp()-1);
+                }
             }, (msg) -> {});
         } else if (origevent instanceof GuildMessageReceivedEvent) {
             GuildMessageReceivedEvent event = (GuildMessageReceivedEvent) origevent;
@@ -120,7 +136,10 @@ public class XPCommand extends ListenerAdapter implements ICommand {
                     else
                         result = ThreadLocalRandom.current().nextInt(length);
 
-                    database.addXp(event.getMember(), result);
+                    Discord_member discord_member = bot.getCaching().getMember().get(event.getMember().getUser().getIdLong()+" "+event.getGuild().getIdLong());
+                    Discord_user discord_user = bot.getCaching().getUser().get(event.getMember().getUser().getIdLong());
+                    discord_member.setMember_xp(discord_member.getMember_xp()+result);
+                    discord_user.setUser_xp(discord_user.getUser_xp()+result);
                 }
             }
         }
@@ -172,11 +191,15 @@ public class XPCommand extends ListenerAdapter implements ICommand {
     }
 
     private void checkLvl(Member member) {
-        if (database.getUserXp(member.getUser())>=(database.getUserLvl(member.getUser())) * multiplicator) {
-            database.addUserLvl(member.getUser());
+        Discord_member discord_member = bot.getCaching().getMember().get(member.getUser().getIdLong()+" "+member.getGuild().getIdLong());
+        Discord_user discord_user = bot.getCaching().getUser().get(member.getUser().getIdLong());
+        if (discord_user.getUser_xp()>=(discord_user.getUser_lvl()*multiplicator)) {
+            discord_user.setUser_xp(0);
+            discord_user.setUser_lvl(discord_user.getUser_lvl()+1);
         }
-        if (database.getGuildXp(member)>=(database.getGuildLvl(member) * multiplicator)) {
-            database.addGuildLvl(member);
+        if (discord_member.getMember_xp()>=(discord_member.getMember_lvl()*multiplicator)) {
+            discord_member.setMember_xp(0);
+            discord_member.setMember_lvl(discord_member.getMember_lvl()+1);
         }
     }
 }

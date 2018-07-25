@@ -40,18 +40,18 @@ public class LinkCommand implements ICommand {
     private LinkListener listener;
     private SearchCommand searchCommand;
     private MailCommand mailCommand;
-    private Database database;
     private Map<Long, Link> requests; // K: Guild id, V: link
     private Map<Long, Link> running;
+    private Bot bot;
 
-    public LinkCommand(LinkManager manager, LinkListener listener, SearchCommand searchCommand, MailCommand mailCommand, Database database) {
+    public LinkCommand(LinkManager manager, LinkListener listener, SearchCommand searchCommand, MailCommand mailCommand, Bot bot) {
         this.manager = manager;
         this.listener = listener;
         this.searchCommand = searchCommand;
         this.mailCommand = mailCommand;
-        this.database = database;
         this.requests = new HashMap<>();
         this.running = new HashMap<>();
+        this.bot = bot;
     }
 
     @Override
@@ -218,7 +218,7 @@ public class LinkCommand implements ICommand {
             sendMessage(channel, Type.ERROR, "That's literally your own guild!").queue(Messages::deleteAfterFiveSec);
             addAnotherGuild(guilds, channel, member);
         } else {
-            Long mailChannel = database.getMailChannel(guild);
+            Long mailChannel = bot.getCaching().getGuilds().get(guild.getIdLong()).getMail_channel();
             if (mailChannel == null || mailChannel == 0) {
                 sendMessage(channel, Type.ERROR, "The given guild hasn't set a mail channel! Please contact their administrators.").queue(Messages::deleteAfterFiveSec);
                 addAnotherGuild(guilds, channel, member);
@@ -240,7 +240,7 @@ public class LinkCommand implements ICommand {
                         Matcher matcher = SearchCommand.FIND_ID.matcher(selected);
                         matcher.find();
                         Guild guild = shardManager.getGuildById(matcher.group().replaceAll("[\\(\\)]", ""));
-                        Long mailChannel = database.getMailChannel(guild);
+                        Long mailChannel = bot.getCaching().getGuilds().get(guild.getIdLong()).getMail_channel();
                         if (guild == member.getGuild()) {
                             sendMessage(channel, Type.ERROR, "That's literally your own guild!").queue(Messages::deleteAfterFiveSec);
                             addAnotherGuild(guilds, channel, member);
