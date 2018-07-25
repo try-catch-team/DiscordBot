@@ -1,6 +1,8 @@
 package de.unhandledexceptions.codersclash.bot.listeners;
 
+import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
+import de.unhandledexceptions.codersclash.bot.core.caching.Discord_member;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
 import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.entities.Guild;
@@ -17,6 +19,7 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,42 +31,50 @@ import java.util.stream.Collectors;
 
 public class DatabaseListener extends ListenerAdapter {
 
-    private Database database;
+    private Bot bot;
     private ShardManager shardManager;
     private Logger logger;
+    private Database database;
 
-    public DatabaseListener(Database database, ShardManager shardManager) {
-        this.database = database;
+    public DatabaseListener(Bot bot, ShardManager shardManager, Database database) {
+        this.bot = bot;
         this.shardManager = shardManager;
         this.logger = Logging.getLogger();
+        this.database = database;
     }
 
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
         logger.info("Left guild \"" + event.getGuild().getName() + "\" (" + event.getGuild().getId() + ")");
-        database.deleteGuild(event.getGuild().getIdLong());
+        bot.getCaching().getGuilds().remove(bot.getCaching().getGuilds().get(event.getGuild().getIdLong()));
     }
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        database.deleteMember(event.getGuild().getIdLong(), event.getUser().getIdLong());
+        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
     }
 
     @Override
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-        database.deleteMember(event.getGuild().getIdLong(), event.getUser().getIdLong());
+        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
     }
 
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         logger.info("Joined guild \"" + event.getGuild().getName() + "\" (" + event.getGuild().getId() + ")");
         long guildId = event.getGuild().getIdLong();
-        event.getGuild().getMemberCache().forEach((member) -> database.createMemberIfNotExists(guildId, member.getUser().getIdLong()));
+        event.getGuild().getMemberCache().forEach((member) -> {
+            if (!bot.getCaching().getMember().containsKey(member.getUser().getIdLong()+" "+member.getGuild().getIdLong())) {
+                bot.getCaching().getMember().put(member.getUser().getIdLong()+" "+member.getGuild().getIdLong(), new Discord_member(member.getUser().getIdLong()+member.getGuild().getIdLong(), member.getGuild().getIdLong(), member.getUser().getIdLong(), 0, 0, 1));
+            }
+        });
     }
 
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-        database.createMemberIfNotExists(event.getGuild().getIdLong(), event.getUser().getIdLong());
+        if (!bot.getCaching().getMember().containsKey(event.getMember().getUser().getIdLong()+" "+event.getMember().getGuild().getIdLong())) {
+            bot.getCaching().getMember().put(event.getMember().getUser().getIdLong()+" "+event.getMember().getGuild().getIdLong(), new Discord_member(event.getMember().getUser().getIdLong()+event.getMember().getGuild().getIdLong(), event.getMember().getGuild().getIdLong(), event.getMember().getUser().getIdLong(), 0, 0, 1));
+        }
     }
 
     @Override

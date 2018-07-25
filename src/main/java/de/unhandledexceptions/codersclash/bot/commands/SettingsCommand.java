@@ -7,6 +7,7 @@ import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.core.Main;
 import de.unhandledexceptions.codersclash.bot.core.Permissions;
+import de.unhandledexceptions.codersclash.bot.core.caching.Discord_guild;
 import de.unhandledexceptions.codersclash.bot.core.reactions.ListDisplay;
 import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
@@ -31,11 +32,11 @@ public class SettingsCommand implements ICommand {
 
     private List<String> zeroToTen = List.of("10", "9", "8", "7", "6", "5", "4", "3", "2", "1", "0");
 
-    private Database database;
+    private Bot bot;
     private CommandSettings settings;
 
-    public SettingsCommand(Database database, CommandSettings settings) {
-        this.database = database;
+    public SettingsCommand(Bot bot, CommandSettings settings) {
+        this.bot = bot;
         this.settings = settings;
     }
 
@@ -78,6 +79,7 @@ public class SettingsCommand implements ICommand {
 
                 TextChannel textChannel = message.getTextChannel();
                 Guild guild = message.getGuild();
+                Discord_guild discord_guild = bot.getCaching().getGuilds().get(guild.getIdLong());
                 switch (current) {
                     case MAIN_MENU:
                         switch (emoji) {
@@ -127,7 +129,7 @@ public class SettingsCommand implements ICommand {
                                     Reactions.newYesNoMenu(user, textChannel, "Would you like to set `" + msg.getContentRaw() + "` as your new prefix?", (m) -> {
                                         m.delete().queue();
                                         settings.setCustomPrefix(textChannel.getGuild().getIdLong(), prefix);
-                                        database.setPrefix(textChannel.getGuild().getIdLong(), prefix);
+                                        bot.getCaching().getGuilds().get(textChannel.getGuild().getIdLong()).setPrefix(prefix);
                                         sendMessage(textChannel, Type.SUCCESS, "Successfully set `" + prefix + "` as the new prefix!").queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.PREFIX, builder);
                                     }, (reaction) -> menu(user, message, Layer.MAIN_MENU, Layer.PREFIX, builder));
@@ -145,11 +147,11 @@ public class SettingsCommand implements ICommand {
                     case REPORTS:
                         if (emoji.equals(Reactions.Y)) {
                             message.clearReactions().queue((voit) -> {
-                                int currentValue = database.getReportsUntilBan(guild);
+                                int currentValue = bot.getCaching().getGuilds().get(guild.getIdLong()).getReports_until_ban();
                                 ListDisplay.displayScrollableListSelection(zeroToTen, message, "When should a member be banned? (0 means never)",
                                         guild.getSelfMember().getColor(), user, currentValue == 11 ? 10 : 10 - currentValue, (selected) -> {
                                             int newValue = Integer.parseInt(selected);
-                                            database.setReportsUntilBan(guild.getIdLong(), newValue == 0 ? 11 : newValue);
+                                            bot.getCaching().getGuilds().get(guild.getIdLong()).setReports_until_ban(newValue == 0 ? 11 : newValue);
                                             sendMessage(textChannel, Type.SUCCESS, "Successfully changed reports until ban to `" + (newValue == 0 ? "NEVER" : newValue) + "`!").queue(Messages::deleteAfterFiveSec);
                                             menu(user, message, Layer.MAIN_MENU, Layer.FEATURES, builder);
                                         }, (aVoid -> menu(user, message, Layer.MAIN_MENU, Layer.FEATURES, builder)));
@@ -158,7 +160,7 @@ public class SettingsCommand implements ICommand {
                         break;
                     case XP_SYSTEM:
                         if (emoji.equals(Reactions.Y)) {
-                            database.setUseXpSystem(guild.getIdLong(), !database.xpSystemActivated(guild.getIdLong()));
+                            bot.getCaching().getGuilds().get(guild.getIdLong()).setXp_system_activated(!bot.getCaching().getGuilds().get(guild.getIdLong()).isXp_system_activated());
                             sendMessage(textChannel, Type.SUCCESS, "Changes were successful!").queue(Messages::deleteAfterFiveSec);
                             menu(user, message, Layer.MAIN_MENU, Layer.XP_SYSTEM, builder);
                         }
@@ -173,8 +175,8 @@ public class SettingsCommand implements ICommand {
                                     msg.delete().queue();
                                     Reactions.newYesNoMenu(user, message.getTextChannel(), "Do you want to set" + Reactions.SPEAKER+  "`" + msg.getContentRaw() + "` as the new AutoChannel?", (m) -> {
                                         m.delete().queue();
-                                        database.setAutoChannel(guild.getIdLong(), guild.getVoiceChannelsByName(msg.getContentRaw(), false).get(0).getIdLong());
-                                        VoiceChannel voiceChannel = guild.getVoiceChannelById(database.getAutoChannel(guild));
+                                        discord_guild.setAuto_channel(guild.getVoiceChannelsByName(msg.getContentRaw(), false).get(0).getIdLong());
+                                        VoiceChannel voiceChannel = guild.getVoiceChannelById(discord_guild.getAuto_channel());
                                         sendMessage(textChannel, Type.SUCCESS, format("AutoChannel successfully set to\n" + Reactions.SPEAKER + "`%s (%s)`", voiceChannel.getName(), voiceChannel.getId())).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder);
                                     }, (m) -> menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder));
@@ -190,7 +192,7 @@ public class SettingsCommand implements ICommand {
                                         var matcher = FIND_ID.matcher(selected);
                                         matcher.find();
                                         var channel = guild.getVoiceChannelById(matcher.group().replaceAll("[\\(\\)]", ""));
-                                        database.setAutoChannel(guild.getIdLong(), channel.getIdLong());
+                                        discord_guild.setAuto_channel(channel.getIdLong());
                                         sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully set to\n" + selected).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder);
                                     }, (anotherVoid) -> menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder));
@@ -201,7 +203,7 @@ public class SettingsCommand implements ICommand {
                                     if (guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
                                         guild.getController().createVoiceChannel("Join to create Channel").queue((channel) -> {
                                             msg.delete().queue();
-                                            database.setAutoChannel(guild.getIdLong(), channel.getIdLong());
+                                            discord_guild.setAuto_channel(channel.getIdLong());
                                             sendMessage(textChannel, Type.SUCCESS, "Success! Your new AutoChannel is" + Reactions.SPEAKER + "`"
                                                     + (channel).getName() + "`").queue(Messages::deleteAfterFiveSec);
                                             menu(user, message, Layer.MAIN_MENU, current, builder);
@@ -220,16 +222,16 @@ public class SettingsCommand implements ICommand {
                                 break;
                             case Reactions.PUT_LITTER_IN_ITS_PLACE:
                                 Reactions.newYesNoMenu(user, textChannel, "Do you want to reset your AutoChannel and therefore deactivate the AutoChannel function?", (msg) -> {
-                                    if (database.getAutoChannel(guild) == 0 || database.getAutoChannel(guild) == null) {
+                                    if (discord_guild.getAuto_channel() == 0) {
                                         sendMessage(textChannel, Type.WARNING, "AutoChannel is not set.").queue(Messages::deleteAfterFiveSec);
                                     } else {
                                         Reactions.newYesNoMenu(user, textChannel, "Do you want to delete the AutoChannel too?", (yes) -> {
-                                            guild.getVoiceChannelById(database.getAutoChannel(guild)).delete().queue();
+                                            guild.getVoiceChannelById(discord_guild.getAuto_channel()).delete().queue();
                                             yes.delete().queue();
-                                            database.setAutoChannel(guild.getIdLong(), 0);
+                                            discord_guild.setAuto_channel(0);
                                             sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully reset and deleted.").queue(Messages::deleteAfterFiveSec);
                                         }, (no) -> {
-                                            database.setAutoChannel(guild.getIdLong(), 0);
+                                            discord_guild.setAuto_channel(0);
                                             sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully reset.").queue(Messages::deleteAfterFiveSec);
                                         });
                                     }
@@ -248,7 +250,7 @@ public class SettingsCommand implements ICommand {
                                     msg.delete().queue();
                                     Reactions.newYesNoMenu(user, message.getTextChannel(), "Do you want to set " + msg.getContentRaw() + " as the new mail channel?", (m) -> {
                                         m.delete().queue();
-                                        database.setMailChannel(guild.getIdLong(), msg.getMentionedChannels().get(0).getIdLong());
+                                        discord_guild.setMail_channel(msg.getMentionedChannels().get(0).getIdLong());
                                         sendMessage(textChannel, Type.SUCCESS, "Mail Channel successfully set to " + msg.getContentRaw()).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder);
                                     }, (m) -> menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder));
@@ -262,7 +264,7 @@ public class SettingsCommand implements ICommand {
                                 message.clearReactions().queue((aVoid) -> {
                                     ListDisplay.displayListSelection(channels, message, user, channels.size() > 50 ? 20 : 10, (selected) -> {
                                         var channel = guild.getTextChannelById(selected.replaceAll("[<>#]", ""));
-                                        database.setMailChannel(guild.getIdLong(), channel.getIdLong());
+                                        discord_guild.setMail_channel(channel.getIdLong());
                                         sendMessage(textChannel, Type.SUCCESS, "Mail Channel successfully set to " + selected).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder);
                                     }, (anotherVoid) -> menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder));
@@ -273,7 +275,7 @@ public class SettingsCommand implements ICommand {
                                     if (guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
                                         guild.getController().createTextChannel("inbox").queue((channel) -> {
                                             msg.delete().queue();
-                                            database.setMailChannel(guild.getIdLong(), channel.getIdLong());
+                                            discord_guild.setMail_channel(channel.getIdLong());
                                             sendMessage(textChannel, Type.SUCCESS, "Success! Your new mail channel is "
                                                     + ((TextChannel) channel).getAsMention()).queue(Messages::deleteAfterFiveSec);
                                             menu(user, message, Layer.MAIN_MENU, current, builder);
@@ -292,16 +294,16 @@ public class SettingsCommand implements ICommand {
                                 break;
                             case Reactions.CLOSED_INBOX:
                                 Reactions.newYesNoMenu(user, textChannel, "Do you want to reset your Mail Channel and therefore deactivate the mail function?", (msg) -> {
-                                    if (database.getMailChannel(guild) == 0 || database.getMailChannel(guild) == null) {
+                                    if (discord_guild.getMail_channel() == 0) {
                                         sendMessage(textChannel, Type.WARNING, "Mail Channel is not set.").queue(Messages::deleteAfterFiveSec);
                                     } else {
                                         Reactions.newYesNoMenu(user, textChannel, "Do you want to delete the mail channel too?", (yes) -> {
-                                            guild.getTextChannelById(database.getMailChannel(guild)).delete().queue();
+                                            guild.getTextChannelById(discord_guild.getMail_channel()).delete().queue();
                                             yes.delete().queue();
-                                            database.setMailChannel(guild.getIdLong(), 0);
+                                            discord_guild.setMail_channel(0);
                                             sendMessage(textChannel, Type.SUCCESS, "Mail Channel successfully reset and deleted.").queue(Messages::deleteAfterFiveSec);
                                         }, (no) -> {
-                                            database.setMailChannel(guild.getIdLong(), 0);
+                                            discord_guild.setMail_channel(0);
                                             sendMessage(textChannel, Type.SUCCESS, "Mail Channel successfully reset.").queue(Messages::deleteAfterFiveSec);
                                         });
                                     }
@@ -342,13 +344,13 @@ public class SettingsCommand implements ICommand {
                 var jda = message.getJDA().asBot().getShardManager();
                 var activated = jda.getEmotesByName("activated", false).get(0).getAsMention();
                 var deactivated = jda.getEmotesByName("deactivated", false).get(0).getAsMention();
-                builder.setTitle("XP System").setDescription((database.xpSystemActivated(message.getGuild().getIdLong())
+                builder.setTitle("XP System").setDescription((bot.getCaching().getGuilds().get(message.getGuild().getIdLong()).isXp_system_activated()
                         ? format("The XP-System is currently %s for this guild.\n Would you like to turn it %s?", activated, deactivated)
                         : format("The XP-System is currently %s for this guild.\n Would you like to turn it %s?", deactivated, activated))
                         + "\n" + Reactions.Y + " Yes\n");
                 break;
             case REPORTS:
-                int currentValue = database.getReportsUntilBan(message.getGuild());
+                int currentValue = bot.getCaching().getGuilds().get(message.getGuild()).getReports_until_ban();
                 builder.setTitle("Report System");
                 builder.appendDescription(currentValue == 11
                         ? "Currently, members will not be banned for reports."
@@ -371,7 +373,7 @@ public class SettingsCommand implements ICommand {
                                 + Reactions.Y + " Yes, let me set a new prefix\n");
                 break;
             case AUTO_CHANNEL:
-                Long idAuto = database.getAutoChannel(message.getGuild());
+                Long idAuto = bot.getCaching().getGuilds().get(message.getGuild()).getAuto_channel();
                 String currentAutoChannel;
                 if (idAuto != null && message.getGuild().getVoiceChannelById(idAuto) != null)
                     currentAutoChannel = "`" + message.getGuild().getVoiceChannelById(idAuto).getName() + "`";
@@ -385,7 +387,7 @@ public class SettingsCommand implements ICommand {
                         + Reactions.PUT_LITTER_IN_ITS_PLACE+ " Deactivate the AutoChannel by deactivating current AutoChannel\n");
                 break;
             case MAIL_CHANNEL:
-                Long idMail = database.getMailChannel(message.getGuild());
+                Long idMail = bot.getCaching().getGuilds().get(message.getGuild().getIdLong()).getMail_channel();
                 String currentMailChannel;
                 if (idMail != null && message.getGuild().getTextChannelById(idMail) != null)
                     currentMailChannel = message.getGuild().getTextChannelById(idMail).getAsMention();

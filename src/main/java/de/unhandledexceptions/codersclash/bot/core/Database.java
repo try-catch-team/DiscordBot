@@ -166,8 +166,9 @@ public class Database {
                     resultset.next();
                     caching.getMember().put(member.getUser().getIdLong()+" "+member.getGuild().getIdLong(), new Discord_member(resultset.getLong("member_id"), guild.getIdLong(),
                             member.getUser().getIdLong(), resultset.getInt("member_xp"), resultset.getInt("member_lvl"), resultset.getInt("permission_lvl")));
-            } catch (SQLException e) {
-                e.printStackTrace();}
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
         for (User user:manager.getUsers()) {
@@ -352,31 +353,6 @@ public class Database {
             logger.error("An SQLException occurred while getting all " + table + " ids from datasource: ", e);
         }
         return ret;
-    }
-
-    public List<ScoreBoardCommand.ScoreBoardUser> getScoreBoard(String table, String order) {
-        try (var connection = dataSource.getConnection();
-             var preparedstatement = connection.prepareStatement("SELECT * FROM "+table+" ORDER BY "+order+" DESC;")) {
-            var resultset = preparedstatement.executeQuery();
-            var list = new ArrayList<ScoreBoardCommand.ScoreBoardUser>();
-            String prefix = "";
-            String guildid = "";
-            if (table.equals("Discord_user")) {
-                prefix = "user";
-                guildid = "user_id";
-            } else {
-                prefix = "member";
-                guildid = "guild_id";
-            }
-            while (resultset.next()) {
-                list.add(new ScoreBoardCommand.ScoreBoardUser(resultset.getString("user_id"), resultset.getString(guildid),
-                        resultset.getLong(prefix+"_xp"), resultset.getLong(prefix+"_lvl")));
-            }
-            return list;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public void setUserXp(User user, long xp) {

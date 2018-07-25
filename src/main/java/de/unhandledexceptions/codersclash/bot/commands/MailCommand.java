@@ -28,12 +28,12 @@ import static de.unhandledexceptions.codersclash.bot.util.Messages.*;
 
 public class MailCommand implements ICommand {
 
-    private Database database;
     private SearchCommand searchCommand;
     private Pattern topicPattern;
+    private Bot bot;
 
-    public MailCommand(Database database, SearchCommand searchCommand) {
-        this.database = database;
+    public MailCommand(Bot bot, SearchCommand searchCommand) {
+        this.bot = bot;
         this.searchCommand = searchCommand;
         this.topicPattern = Pattern.compile("##.+##");
     }
@@ -68,7 +68,7 @@ public class MailCommand implements ICommand {
 
     public void sendMail(Member member, TextChannel channel, Guild guild, String content) {
         Long mailChannelId;
-        if ((mailChannelId = database.getMailChannel(guild)) != null && mailChannelId != 0) {
+        if ((mailChannelId = bot.getCaching().getGuilds().get(guild.getIdLong()).getMail_channel()) != null && mailChannelId != 0) {
             var mailChannel = guild.getTextChannelById(mailChannelId);
             if (mailChannel != null) {
                 var builder = new EmbedBuilder();
