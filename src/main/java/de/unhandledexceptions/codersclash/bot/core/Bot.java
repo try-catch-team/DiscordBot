@@ -95,7 +95,7 @@ public class Bot {
                 .put(linkCommand, "link")
                 .put(mailCommand, "mail", "contact")
                 .put(new MuteCommand(muteManager), "mute", "silence")
-                .put(new Permissions(commandSettings, database), "permission", "perms", "perm")
+                .put(new Permissions(commandSettings, this), "permission", "perms", "perm")
                 .put(new ProfileCommand(reportCommand), "profile", "userinfo")
                 .put(reportCommand, "report", "rep", "reports")
                 .put(new RoleCommand(), "role")
