@@ -106,6 +106,7 @@ public class Bot {
                 .put(voteCommand, "vote", "poll")
                 .put(xpCommand, "xp", "level", "lvl")
                 .put(new BotCommand(config, this), "bot", "owner")
+                .put(new EvalCommand(config, shardManager, voteCommand))
                 .getCommandSettings()
                 .setCooldown(config.getCommandCooldown())
                 .activate();
