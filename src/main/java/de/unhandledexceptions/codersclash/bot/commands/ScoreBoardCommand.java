@@ -37,10 +37,10 @@ public class ScoreBoardCommand implements ICommand {
                 String table = "";
                 String order = "";
                 if ("user".equals(type)) {
-                    table = "discord_user";
+                    table = "Discord_user";
                     order = "user_lvl";
                 } else if ("member".equals(type)) {
-                    table = "discord_member";
+                    table = "Discord_member";
                     order = "member_lvl";
                 }
                 StringBuilder builder = new StringBuilder();
