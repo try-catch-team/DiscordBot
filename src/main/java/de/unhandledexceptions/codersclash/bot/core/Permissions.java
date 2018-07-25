@@ -17,11 +17,11 @@ import static java.lang.String.format;
 public class Permissions implements ICommand {
 
     private CommandSettings settings;
-    private static Database database;
+    private static Bot bot;
 
-    public Permissions(CommandSettings settings, Database database) {
+    public Permissions(CommandSettings settings, Bot bot) {
         this.settings = settings;
-        Permissions.database = database;
+        Permissions.bot = bot;
     }
 
     @Override
@@ -39,11 +39,11 @@ public class Permissions implements ICommand {
                     short level = Short.parseShort(args[1]);
                     if (event.getMessage().getMentionedMembers().isEmpty()) {
                         var targetRole = event.getMessage().getMentionedRoles().get(0);
-                        guild.getMemberCache().stream().filter((m) -> m.getRoles().contains(targetRole)).forEach((m) -> database.changePermissionLevel(m, level));
+                        guild.getMemberCache().stream().filter((m) -> m.getRoles().contains(targetRole)).forEach((m) -> bot.getCaching().getMember().get(m.getUser().getIdLong()+" "+m.getGuild().getIdLong()).setPermission_lvl(level));
                         sendMessage(channel, Type.SUCCESS, format("Permission level of role `%s` successfully set to `%d`.", targetRole.getName(), level)).queue();
                     } else {
                         var targetMember = guild.getMember(event.getMessage().getMentionedUsers().get(0));
-                        database.changePermissionLevel(targetMember, level);
+                        bot.getCaching().getMember().get(targetMember.getUser().getIdLong()+" "+targetMember.getGuild().getIdLong()).setPermission_lvl(level);
                         sendMessage(channel, Type.SUCCESS, format("Permission level of member `%#s` successfully set to `%d`.", targetMember.getUser(), level)).queue();
                     }
                 }
@@ -65,6 +65,6 @@ public class Permissions implements ICommand {
     }
 
     public static int getPermissionLevel(Member member) {
-        return database.getPermissionLevel(member);
+        return bot.getCaching().getMember().get(member.getUser().getIdLong()+" "+member.getGuild().getIdLong()).getPermission_lvl();
     }
 }
