@@ -3,6 +3,7 @@ package de.unhandledexceptions.codersclash.bot.core.connection;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.core.events.user.UserTypingEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.ArrayList;
@@ -40,6 +41,15 @@ public class LinkListener extends ListenerAdapter {
                 linksToRemoveFrom.add(link);
         });
         linksToRemoveFrom.forEach((link) -> linkManager.removeGuild(link, guild, false));
+    }
+
+    @Override
+    public void onUserTyping(UserTypingEvent event) {
+        if (event.getUser().isBot())
+            return;
+
+        Guild guild = event.getGuild();
+        links.stream().filter((link) -> link.getGuilds().contains(guild.getIdLong())).forEach((link) -> link.sendTyping(event.getTextChannel()));
     }
 
     public void addLink(Link link) {

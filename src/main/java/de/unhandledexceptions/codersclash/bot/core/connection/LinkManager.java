@@ -3,10 +3,13 @@ package de.unhandledexceptions.codersclash.bot.core.connection;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.webhook.WebhookClient;
+import net.dv8tion.jda.webhook.WebhookClientBuilder;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,14 +82,23 @@ public class LinkManager {
         }
 
         @Override
+        public void sendTyping(TextChannel channel) {
+            Long linkedChannel = channelIds.get(channel.getGuild().getIdLong());
+            if (linkedChannel != null && channel.getIdLong() == linkedChannel)
+                typing(channel);
+        }
+
+        @Override
         public void distributeMessage(Message message) {
             if (message.getAuthor().isBot() || message.getAuthor().isFake())
                 return;
 
             Long linkedChannel = channelIds.get(message.getGuild().getIdLong());
             if (linkedChannel != null && message.getChannel().getIdLong() == linkedChannel)
-                send(message.getGuild(), String.format("`%#s` :satellite: **%s:** %s", message.getAuthor(), message.getGuild().getName(), message.getContentDisplay()));
+                send(message.getGuild(), message.getContentDisplay(), message.getAuthor());
         }
+
+
 
         @Override
         public Collection<Long> getGuilds() {
@@ -109,13 +121,46 @@ public class LinkManager {
             return channelIds.size() < 2;
         }
 
-        private void send(Guild source, String text) {
+        Webhook webhook = null;
+
+        private void send(Guild source, String text, User user) {
             channelIds.forEach((guildId, channelId) -> {
                 if (source.getIdLong() != guildId) {
                     var channel = shardManager.getGuildById(guildId).getTextChannelById(channelId);
-                    if (channel.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE))
-                        channel.sendMessage(text).queue();
+                    webhook = null;
+                    if (channel.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_WRITE)) {
+                        channel.getGuild().getWebhooks().queue(
+                                (list) -> {
+                                    for (Webhook webhook1: list) {
+                                        if (webhook1.getName().equals(shardManager.getShards().get(0).getSelfUser().getName()+"-Webhook")) {
+                                            webhook = webhook1;
+                                        }
+                                    }
+                                    if (webhook == null)
+                                        if (channel.getGuild().getSelfMember().hasPermission(Permission.MANAGE_WEBHOOKS)) {
+                                            try {
+                                                channel.createWebhook(shardManager.getShards().get(0).getSelfUser().getName()+"-Webhook").setAvatar(Icon.from(new URL(shardManager.getShards().get(0).getSelfUser().getAvatarUrl()).openStream())).queue(
+                                                        (webhook1 -> webhook = webhook1)
+                                                );
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    WebhookClient webhookClient = webhook.newClient().build();
+                                        webhookClient.send(new WebhookMessageBuilder().setUsername(user.getName()+"#"+user.getDiscriminator()+" ("+source.getName()+")").setAvatarUrl(user.getAvatarUrl()).setContent(text).build());
+                                        webhookClient.close();
+                                }
+                        );
+                    }
                 }
+            });
+        }
+
+        private void typing(TextChannel channel) {
+            channelIds.forEach((guildId, channelId) -> {
+                var channel1 = shardManager.getGuildById(guildId).getTextChannelById(channelId);
+                if (!channel1.equals(channel))
+                    channel1.sendTyping().queue();
             });
         }
     }

@@ -17,6 +17,8 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -304,6 +306,12 @@ public class LinkCommand implements ICommand {
                 mailCommand.sendMail(requester, channel, guild, message);
             }
             sendMessage(channel, Type.SUCCESS, "Successfully sent a message to the following guilds: ```\n" + String.join("\n", guilds.stream().map(Guild::toString).collect(Collectors.toList())) + "```").queue();
+            try {
+                TextChannel textChannel = (TextChannel) newChannel;
+                textChannel.createWebhook(requester.getJDA().getSelfUser().getName()+"-Webhook").setAvatar(Icon.from(new URL(requester.getJDA().getSelfUser().getAvatarUrl()).openStream())).queue();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
     }
 
