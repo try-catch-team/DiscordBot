@@ -361,7 +361,7 @@ public class Database {
             var list = new ArrayList<ScoreBoardCommand.ScoreBoardUser>();
             String prefix = "";
             String guildid = "";
-            if (table.equals("discord_user")) {
+            if (table.equals("Discord_user")) {
                 prefix = "user";
                 guildid = "user_id";
             } else {
