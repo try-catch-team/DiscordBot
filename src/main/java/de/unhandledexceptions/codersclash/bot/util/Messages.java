@@ -10,10 +10,20 @@ import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class Messages {
+
+    public static ResourceBundle getBundle(String locale) {
+        return getBundle(new Locale(locale));
+    }
+
+    public static ResourceBundle getBundle(Locale locale) {
+        return ResourceBundle.getBundle("Messages", locale);
+    }
 
     private static MessageEmbed buildMessage(Type type, String content, String title, boolean timestamp, EmbedBuilder embedBuilder) {
         embedBuilder.appendDescription(content);
@@ -24,6 +34,22 @@ public class Messages {
                 .setTitle(title)
                 .setTimestamp(timestamp ? Instant.now() : null)
                 .build();
+    }
+
+    public static MessageAction sendMessage(ResourceBundle resourceBundle, MessageChannel channel, Type type, String content) {
+        return channel.sendMessage(buildMessage(type, resourceBundle.getString(content), null, false, new EmbedBuilder()));
+    }
+
+    public static MessageAction sendMessage(ResourceBundle resourceBundle, MessageChannel channel, Type type, String content, String title) {
+        return channel.sendMessage(buildMessage(type, resourceBundle.getString(content), resourceBundle.getString(title), false, new EmbedBuilder()));
+    }
+
+    public static MessageAction sendMessage(ResourceBundle resourceBundle, MessageChannel channel, Type type, String content, String title, boolean timestamp) {
+        return channel.sendMessage(buildMessage(type, resourceBundle.getString(content), resourceBundle.getString(title), timestamp, new EmbedBuilder()));
+    }
+
+    public static MessageAction sendMessage(ResourceBundle resourceBundle, MessageChannel channel, Type type, String content, String title, boolean timestamp, EmbedBuilder embedBuilder) {
+        return channel.sendMessage(buildMessage(type, resourceBundle.getString(content), resourceBundle.getString(title), timestamp, embedBuilder));
     }
 
     public static MessageAction sendMessage(MessageChannel channel, Type type, String content) {
@@ -54,8 +80,20 @@ public class Messages {
         return (throwable) -> sendMessage(channel, Type.WARNING, String.format("Something went wrong (this may not be relevant):\n```\n%s```", throwable.getMessage())).queue();
     }
 
+    public static Consumer<Throwable> defaultFailure(ResourceBundle resourceBundle, MessageChannel channel) {
+        return (throwable) -> sendMessage(channel, Type.WARNING, String.format(resourceBundle.getString("util.defaultFailure")+"```\n%s```", throwable.getMessage())).queue();
+    }
+
     public static void noPermissionsMessage(MessageChannel channel, Member member) {
         sendMessage(channel, Type.ERROR, "You do not have permission to execute this command. " + member.getAsMention()).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
+    }
+
+    public static void noPermissionsMessage(ResourceBundle resourceBundle, MessageChannel channel, Member member) {
+        sendMessage(channel, Type.ERROR, resourceBundle.getString("util.noPermission") + member.getAsMention()).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
+    }
+
+    public static void wrongUsageMessage(ResourceBundle resourceBundle, MessageChannel channel, Member member, ICommand command) {
+        sendMessage(channel, Type.WARNING, resourceBundle.getString("util.wrongUsage")+"\n\n" + command.info(member)).queue();
     }
 
     public static void wrongUsageMessage(MessageChannel channel, Member member, ICommand command) {

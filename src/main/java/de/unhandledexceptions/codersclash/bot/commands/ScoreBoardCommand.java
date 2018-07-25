@@ -66,12 +66,12 @@ public class ScoreBoardCommand implements ICommand {
                     }
                 }
             }
-            for (int i =0; discord_users.size()-1>i; i++) {
-                if (!(discord_users.get(i).getUser_lvl()>discord_users.get(i+1).getUser_lvl())) {
-                    if (!(discord_users.get(i).getUser_xp()>discord_users.get(i+1).getUser_xp())) {
-                        Discord_user o1 = discord_users.get(i);
-                        Discord_user o2 = discord_users.get(i+1);
-                        ArrayList<Discord_user> discord_users1 = new ArrayList<>()  {{
+            for (int i =0; discord_members.size()-1>i; i++) {
+                if (!(discord_members.get(i).getMember_lvl()>discord_members.get(i+1).getMember_lvl())) {
+                    if (!(discord_members.get(i).getMember_xp()>discord_members.get(i+1).getMember_xp())) {
+                        Discord_member o1 = discord_members.get(i);
+                        Discord_member o2 = discord_members.get(i+1);
+                        ArrayList<Discord_member> discord_members1 = new ArrayList<>()  {{
                             add(o1);
                             add(o2);
                         }};

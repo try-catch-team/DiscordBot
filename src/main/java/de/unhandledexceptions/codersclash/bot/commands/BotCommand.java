@@ -62,6 +62,9 @@ public class BotCommand implements ICommand {
                             }
                         } else wrongUsageMessage(channel, member, this);
                         break;
+                    case "test":
+                        sendMessage(Messages.getBundle("de"), channel, Messages.Type.SUCCESS,"util.test", "util.test").queue();
+                        break;
                 }
 
             } else Messages.wrongUsageMessage(channel, member, this);
