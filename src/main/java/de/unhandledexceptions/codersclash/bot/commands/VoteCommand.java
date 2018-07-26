@@ -95,8 +95,6 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
         Guild guild = event.getGuild();
 
-
-
         if (votes.containsKey(guild.getIdLong())) {
             if (votes.get(guild.getIdLong()).getVoteCreator().getState() != VoteState.DEFAULT)
             {
@@ -104,7 +102,6 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
                 return;
             }
         }
-
 
         Main.otherThread(() -> {
             sendMessage(channel, Type.SUCCESS, "Okay great! Let's create your vote!").queue();
