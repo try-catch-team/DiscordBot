@@ -354,7 +354,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
         var stringBuilder = new StringBuilder();
 
-        stringBuilder.append(vote.getTopic()).append("\n\n**Answers:**\n");
+        stringBuilder.append(vote.getTopic()).append(format("\n\n**Answers (Votes per User: `%s`):**\n", vote.getVotesPerUser()));
 
         for (int i = 1; i < vote.getVoteAnswers().size() + 1; i++)
         {
