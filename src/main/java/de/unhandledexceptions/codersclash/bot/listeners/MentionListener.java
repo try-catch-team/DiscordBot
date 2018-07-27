@@ -54,9 +54,9 @@ public class MentionListener extends ListenerAdapter {
                     .addField("Members", Long.toString(members), true)
                     .addField("Current Uptime", this.getUptime(), true)
 										.addBlankField(true)
-                    .addField("Source Code", "[GitHub](https://github.com/JohnnyJayJay/codersclash-unhandledexceptions-bot)", true)
+                    .addField("Source Code", "[GitHub](https://github.com/try-catch-team/DiscordBot)", true)
                     .addField("Need Help?", "[Our Developement Server](https://discord.gg/fKtyBF7)", true)					
-                    .addField("Help translating me!", "[Crowdin]()", true)
+                    .addField("Help translating me!", "[Crowdin](https://crowdin.com/project/try-catch-bot)", true)
                     .setColor(event.getGuild().getSelfMember().getColor());
             Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue();
             //Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue(this::reactionsAdd);
