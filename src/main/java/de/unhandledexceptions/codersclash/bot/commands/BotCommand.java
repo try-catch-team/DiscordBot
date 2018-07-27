@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 import static de.unhandledexceptions.codersclash.bot.util.Messages.wrongUsageMessage;
+import static java.lang.String.format;
 
 /**
  * @author Hax
@@ -73,6 +74,7 @@ public class BotCommand implements ICommand {
 
     @Override
     public String info(Member member) {
-        return "**Usage**: `[Prefix][bot|owner] cache [read|updatedb]`\n**Usage**: `[Prefix][bot|owner] [checkperms|permscheck]`\n\n**BOT OWNERS ONLY**`";
+        String prefix = Bot.getPrefix(member.getGuild().getIdLong());
+        return format("**Usage**: `%s[bot|owner] cache [read|updatedb]`\n**Usage**: `%s[bot|owner] [checkperms|permscheck]`\n\n**Bot Owners only**", prefix, prefix);
     }
 }
