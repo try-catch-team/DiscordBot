@@ -328,10 +328,10 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
         String voteStats = format(
                 "**Your vote information**\n\n" +
-                        "%s Time:\t\t\t%s %s\n" +
+                        "%s Time:\t\t\t`%s` %s\n" +
                         "%s Channel:\t\t<#%s>\n" +
-                        "%s Votes per user:\t%s\n" +
-                        "%s Answer count:\t%s", reactions[0], vote.getTime(), vote.getTimeUnit().name().toLowerCase(), reactions[1], vote.getTargetChannelId(), Reactions.USER, vote.getVotesPerUser(), reactions[2], vote.getVoteAnswers().size());
+                        "%s Votes per user:\t`%s`\n" +
+                        "%s Answer count:\t`%s`", reactions[0], vote.getTime(), vote.getTimeUnit().name().toLowerCase(), reactions[1], vote.getTargetChannelId(), Reactions.USER, vote.getVotesPerUser(), reactions[2], vote.getVoteAnswers().size());
 
         sendMessage(event.getChannel(), Type.INFO, voteStats, false).queue();
     }
