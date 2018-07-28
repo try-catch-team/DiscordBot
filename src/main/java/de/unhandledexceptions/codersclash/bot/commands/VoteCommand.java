@@ -226,7 +226,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
             vote.getVoteAnswers().add(new VoteAnswer(event.getMessage().getContentRaw(), vote.getVoteCreator(), vote, vote.getVoteAnswers().size() + 1));
 
-            sendMessage(event.getChannel(), Type.SUCCESS, format("Received answer. Answer count: %s.", vote.getVoteAnswers().size())).queue();
+            sendMessage(event.getChannel(), Type.SUCCESS, format("Received answer. Answer count: `%s`.", vote.getVoteAnswers().size())).queue();
         }
 
         if (creator.getState() == VoteState.VOTES) {
@@ -438,7 +438,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
                 stringBuilder.append(emoteName + " " + reactionCount.get(emoteName) / total * 100 + "%\n");
             }
 
-            String msg = "Vote results:\n\n" + stringBuilder.toString();
+            String msg = "**Vote results:**\n\n" + stringBuilder.toString();
 
             sendMessage(vote.getTargetChannel(), Type.INFO, msg).queue();
             votes.remove(vote.getGuildId());
