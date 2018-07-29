@@ -45,9 +45,9 @@ public class RoleCommand implements ICommand {
                     createRole(event, member, channel, role, controller);
                 } else if (args[0].equalsIgnoreCase("add")) {
                     if (roles.size() > 1) {
-                        Reactions.newYesNoMenu(member.getUser(), channel, "Multiple roles with this name detected. Do you want to add all of them?\n"
-                                + Reactions.YES_EMOTE + " Yes, add all of them.\n"
-                                + Reactions.NO_EMOTE + " No, let me select one.", (msg) -> {
+                        Reactions.newYesNoMenu(member.getUser(), channel, format("Multiple roles with this name detected. Do you want to add all of them?\n"
+                                + "%s Yes, add all of them.\n"
+                                + "%s No, let me select one.",Reactions.YES_EMOTE, Reactions.NO_EMOTE ), (msg) -> {
                             msg.delete().queue();
                             controller.addRolesToMember(target, roles).queue(
                                     (v) -> sendMessage(channel, Type.SUCCESS, format("Successfully granted `%#s` provided roles. Executor: %s", target.getUser(), member), true).queue(), defaultFailure(channel));
@@ -71,9 +71,9 @@ public class RoleCommand implements ICommand {
                     }
                 } else if (args[0].equalsIgnoreCase("remove")) {
                     if (roles.size() > 1) {
-                        Reactions.newYesNoMenu(member.getUser(), channel, "Multiple roles with this name detected. Do you want to remove all of them?\n"
-                                + Reactions.YES_EMOTE + " Yes, remove all of them.\n"
-                                + Reactions.NO_EMOTE + " No, let me select one.", (msg) -> {
+                        Reactions.newYesNoMenu(member.getUser(), channel, format("Multiple roles with this name detected. Do you want to remove all of them?\n"
+                                + "%s Yes, remove all of them.\n"
+                                + "%s No, let me select one.", Reactions.YES_EMOTE, Reactions.NO_EMOTE), (msg) -> {
                             msg.delete().queue();
                             controller.removeRolesFromMember(target, roles).queue(
                                     (v) -> sendMessage(channel, Type.SUCCESS, format("Successfully removed `%#s` provided roles. Executor: %s", target.getUser(), member), true).queue(), defaultFailure(channel));
@@ -107,7 +107,7 @@ public class RoleCommand implements ICommand {
 
     private void createRole(CommandEvent event, Member member, TextChannel channel, String role, GuildController controller) {
         sendMessage(channel, Type.ERROR, format("There is no role with the name `%s` that I can interact with!", role)).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
-        Reactions.newYesNoMenu(member.getUser(), channel, "Do you wish to create a new role `" + role + "`?",
+        Reactions.newYesNoMenu(member.getUser(), channel, format("Do you wish to create a new role `%s`?", role),
                 (msg) -> {
                     msg.delete().queue();
                     controller.createRole().setName(role).queue((newRole) -> sendMessage(channel, Type.SUCCESS, "Role created! Do you want to add the role?").queue(

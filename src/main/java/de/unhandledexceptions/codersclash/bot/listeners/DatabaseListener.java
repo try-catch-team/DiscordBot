@@ -2,6 +2,7 @@ package de.unhandledexceptions.codersclash.bot.listeners;
 
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
+import de.unhandledexceptions.codersclash.bot.core.caching.Caching;
 import de.unhandledexceptions.codersclash.bot.core.caching.Discord_member;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
 import net.dv8tion.jda.bot.sharding.ShardManager;
@@ -35,12 +36,14 @@ public class DatabaseListener extends ListenerAdapter {
     private ShardManager shardManager;
     private Logger logger;
     private Database database;
+    private Caching caching;
 
-    public DatabaseListener(Bot bot, ShardManager shardManager, Database database) {
+    public DatabaseListener(Bot bot, ShardManager shardManager, Database database, Caching caching) {
         this.bot = bot;
         this.shardManager = shardManager;
         this.logger = Logging.getLogger();
         this.database = database;
+        this.caching = caching;
     }
 
     @Override
@@ -82,6 +85,8 @@ public class DatabaseListener extends ListenerAdapter {
         logger.info("Bot has been reconnected on a new session.");
         logger.warn("Database will be refreshed.");
         this.refreshDatabase();
+        caching.clearfromjda(event.getJDA());
+        caching.readall(event.getJDA());
     }
 
     @Override
@@ -98,6 +103,8 @@ public class DatabaseListener extends ListenerAdapter {
     public void onReady(ReadyEvent event) {
         logger.info("JDA " + event.getJDA().getShardInfo().getShardId() + " is ready.");
         this.refreshDatabase();
+        caching.clearfromjda(event.getJDA());
+        caching.readall(event.getJDA());
     }
 
     private synchronized void refreshDatabase() {

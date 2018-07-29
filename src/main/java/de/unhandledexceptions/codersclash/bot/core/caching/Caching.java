@@ -3,6 +3,10 @@ package de.unhandledexceptions.codersclash.bot.core.caching;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.User;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -21,23 +25,41 @@ public class Caching {
     private static Logger logger = Logging.getLogger();
 
     private Database database;
-    private Bot bot;
 
     private Map<Long, Discord_guild> guilds;
-    private Map<String, Discord_member> member;
-    private Map<Long, Discord_user> user;
+    private Map<String, Discord_member> members;
+    private Map<Long, Discord_user> users;
 
     public Caching(Database database, Bot bot) {
         this.database = database;
-        this.bot = bot;
         guilds = new HashMap<>();
-        member = new HashMap<>();
-        user = new HashMap<>();
+        members = new HashMap<>();
+        users = new HashMap<>();
     }
 
-    public Caching readall() {
+    public Caching clearall() {
+        guilds.clear();
+        members.clear();
+        users.clear();
+        return this;
+    }
+
+    public Caching clearfromjda(JDA jda) {
+        for (Guild guild:jda.getGuilds()) {
+            guilds.remove(guild.getIdLong());
+            for (Member member: guild.getMembers()) {
+                members.remove(member.getUser().getIdLong()+" "+member.getGuild().getIdLong());
+            }
+        }
+        for (User user: jda.getUsers()) {
+            users.remove(user.getIdLong());
+        }
+        return this;
+    }
+
+    public Caching readall(JDA jda) {
         logger.warn("Reading DB...");
-        database.readall(this, bot);
+        database.readall(this, jda);
         logger.info("Readed DB!");
         return this;
     }
@@ -54,11 +76,11 @@ public class Caching {
     }
 
     public Map<String, Discord_member> getMember() {
-        return member;
+        return members;
     }
 
     public Map<Long, Discord_user> getUser() {
-        return user;
+        return users;
     }
 
 }

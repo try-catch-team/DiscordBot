@@ -278,10 +278,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
     private void sendTimeReactionMessage(Vote vote, GuildMessageReceivedEvent event) {
         final String message =
-                "\u23F2 When should the vote end?\n\n" +
-                        emojis[0] + " Day\n" +
-                        emojis[1] + " Hour\n" +
-                        emojis[2] + " Minute";
+                format("\u23F2 When should the vote end?\n\n%s Day\n%s Hour\n%s Minute", emojis[0], emojis[1], emojis[2]);
 
 
         sendMessage(event.getChannel(), Type.QUESTION, message).queue(msg -> {
@@ -312,8 +309,8 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
 
     private void sendTimeMessage(GuildMessageReceivedEvent event, Vote vote) {
         String time = vote.getTimeUnit().name().toLowerCase();
-        sendMessage(event.getChannel(), Type.SUCCESS, "Successfully set time to " + time + ".").queue();
-        sendMessage(event.getChannel(), Type.INFO, "How many " + time + " should the vote last?").queue();
+        sendMessage(event.getChannel(), Type.SUCCESS, format("Successfully set time to %s.", time)).queue();
+        sendMessage(event.getChannel(), Type.INFO, format("How many %s should the vote last?", time)).queue();
     }
 
     private void sendChannelMessage(GuildMessageReceivedEvent event) {
@@ -416,7 +413,7 @@ public class VoteCommand extends ListenerAdapter implements ICommand {
             try {
                 ChartUtils.saveChartAsJPEG(chartFile, chart.getChart(), WIDTH, HEIGHT);
             } catch (IOException e) {
-                sendMessage(vote.getTargetChannel(), Type.ERROR, "Something went wrong while creating your file!").queue();
+                sendMessage(vote.getTargetChannel(), Type.ERROR, "\"Nobody voted so no result can be created!\"").queue();
             }
 
             sendMessage(vote.getTargetChannel(), Type.SUCCESS, "Your result has been created and will be posted within the next `10` seconds!").queue(Messages::deleteAfterFiveSec);

@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.*;
+import static java.lang.String.format;
 
 /**
  * @author Johnny_JayJay
@@ -81,7 +82,7 @@ public class MailCommand implements ICommand {
                     topic = found.replaceAll("##", "");
                 }
                 builder.setTitle("Via \"" + member.getGuild().getName() + "\" (" + member.getGuild().getId() + ")")
-                        .setAuthor(String.format("%#s", author), null, author.getEffectiveAvatarUrl())
+                        .setAuthor(format("%#s", author), null, author.getEffectiveAvatarUrl())
                         .setColor(member.getColor())
                         .setFooter("Inbox", null)
                         .setTimestamp(Instant.now())
@@ -91,13 +92,13 @@ public class MailCommand implements ICommand {
                             (msg) -> sendMessage(channel, Type.SUCCESS, "Mail sent!").queue(),
                             defaultFailure(channel));
                 } else {
-                    sendMessage(channel, Type.ERROR, "I can't send a mail to guild `" + guild + "`, because I have no permissions to do that!").queue();
+                    sendMessage(channel, Type.ERROR, format("I can't send a mail to guild `%s`, because I have no permissions to do that!",guild)).queue();
                 }
             } else {
-                sendMessage(channel, Type.ERROR, "I can't send a mail to `" + guild + "`, it seems like they deleted their mail channel!").queue();
+                sendMessage(channel, Type.ERROR, format("I can't send a mail to guild `%s`, it seems like they deleted their mail channel!", guild)).queue();
             }
         } else {
-            sendMessage(channel, Type.ERROR, "The guild `" + guild + "` hasn't set a mail channel! Contact their administrators.").queue();
+            sendMessage(channel, Type.ERROR, format("The guild `%s` hasn't set a mail channel! Contact their administrators.",guild)).queue();
         }
     }
 
@@ -128,10 +129,10 @@ public class MailCommand implements ICommand {
 
     @Override
     public String info(Member member) {
-        return "**Description:** Send a \"mail\" to a guild the bot is also on!\n\n"
-                + "**Usage:** `" + Bot.getPrefix(member.getGuild().getIdLong()) + "[mail|contact] <Guild-ID> <Message>`\nIf you don't have an id, replace it with \"NOID\". "
+        return format("**Description:** Send a \"mail\" to a guild the bot is also on!\n\n"
+                + "**Usage:** `%s[mail|contact] <Guild-ID> <Message>`\nIf you don't have an id, replace it with \"NOID\". "
                 + "You may then search a guild by name.\nTo add a topic to your mail, put `##your-topic##` somewhere "
                 + "(replace \"your-topic\" with the topic you want).\nThis *only* works if the other guild has set a mail channel.\n\n"
-                + "**Permission Level:** `2`";
+                + "**Permission Level:** `2`", Bot.getPrefix(member.getGuild().getIdLong()));
     }
 }

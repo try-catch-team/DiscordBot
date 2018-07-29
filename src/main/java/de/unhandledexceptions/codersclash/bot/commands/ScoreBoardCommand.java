@@ -82,9 +82,11 @@ public class ScoreBoardCommand implements ICommand {
             StringBuilder builder = new StringBuilder();
             builder.append("```");
             for (int i =discord_members.size()-1; i!=0 && discord_members.size()-10<i; i--) {
-                builder.append(bot.getAPI().getUserById(discord_members.get(i).getUser_id()).getName() + "#" +
-                        bot.getAPI().getUserById(discord_members.get(i).getUser_id()).getDiscriminator() + "   " +
-                        "\tLevel: " + discord_members.get(i).getMember_lvl() + "   " + "\tXP: " + discord_members.get(i).getMember_xp() + "\n");
+                builder.append(format("%s#%s\tLevel: %s\tXP: %s\n",
+                        bot.getAPI().getUserById(discord_members.get(i).getUser_id()).getName(),
+                        bot.getAPI().getUserById(discord_members.get(i).getUser_id()).getDiscriminator(),
+                        discord_members.get(i).getMember_lvl(),
+                        discord_members.get(i).getMember_xp()));
             }
             builder.append("```");
             // thanks for following iglookid <3
@@ -100,9 +102,11 @@ public class ScoreBoardCommand implements ICommand {
             builder.append(":arrow_right: **Your place**\n"+place1);
             builder.append("```");
             for (int i =discord_users.size()-1; i!=0 && discord_users.size()-10<i; i--) {
-                builder.append(bot.getAPI().getUserById(discord_users.get(i).getUser_id()).getName() + "#" +
-                        bot.getAPI().getUserById(discord_users.get(i).getUser_id()).getDiscriminator() + "   " +
-                        "\tLevel: " + discord_users.get(i).getUser_lvl() + "   " + "\tXP: " + discord_users.get(i).getUser_xp() + "\n");
+                builder.append(format("%s#%s\tLevel: %s \tXP: %s \n",
+                        bot.getAPI().getUserById(discord_users.get(i).getUser_id()).getName(),
+                        bot.getAPI().getUserById(discord_users.get(i).getUser_id()).getDiscriminator(),
+                        discord_users.get(i).getUser_lvl(),
+                        discord_users.get(i).getUser_xp()));
             }
             int place2 =0;
             for (int i =discord_users.size()-1; i!=0; i--) {

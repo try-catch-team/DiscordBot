@@ -44,12 +44,6 @@ public class Main {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    bot.getCaching().readall();
-                }
-            }, 1000);
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
                     bot.getCaching().updateDB();
                 }
             }, 300000, 300000);

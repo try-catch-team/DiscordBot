@@ -73,9 +73,9 @@ public class LinkCommand implements ICommand {
 
         if (args[0].equalsIgnoreCase("request")) {
             if (running.containsKey(guild.getIdLong())) {
-                sendMessage(channel, Type.WARNING, "There is an active link to this guild. To request a new one, you must close it first.\n" +
-                        "To invite new guilds to this link, you may use `" + Bot.getPrefix(guild.getIdLong()) + "link invite <name|id>`. To disconnect from this link, " +
-                        "use `" + Bot.getPrefix(guild.getIdLong()) + "link disconnect`.").queue();
+                sendMessage(channel, Type.WARNING, format("There is an active link to this guild. To request a new one, you must close it first.\n" +
+                        "To invite new guilds to this link, you may use `%slink invite <name|id>`. To disconnect from this link, " +
+                        "use `%slink disconnect`.", Bot.getPrefix(guild.getIdLong()), Bot.getPrefix(guild.getIdLong()))).queue();
             } else {
                 Reactions.newYesNoMenu(member.getUser(), channel, "There are no active links to this guild. Would you like to request one?", (msg) -> Main.otherThread(() -> {
                     Set<Guild> guildSet = new HashSet<>();
@@ -110,8 +110,7 @@ public class LinkCommand implements ICommand {
                     sendMessage(channel, Type.ERROR, "There was a request for this guild, but it is no longer available. Reason: unexpected amount of guilds in this link.").queue();
                 }
             } else {
-                sendMessage(channel, Type.INFO, "There is no request for this guild. To create one, use `"
-                        + Bot.getPrefix(guild.getIdLong()) + "link request <name|id>`.").queue();
+                sendMessage(channel, Type.INFO, format("There is no request for this guild. To create one, use `link request <name|id>`.",Bot.getPrefix(guild.getIdLong()))).queue();
             }
         } else if (args[0].equalsIgnoreCase("disconnect")) {
             if (running.containsKey(guild.getIdLong())) {
@@ -124,8 +123,7 @@ public class LinkCommand implements ICommand {
                     manager.removeGuild(link, guild, false);
                 });
             } else {
-                sendMessage(channel, Type.INFO, "There are no active links to this guild. You may create one with " +
-                        "`" + Bot.getPrefix(guild.getIdLong()) + "link request <name|id>`.").queue();
+                sendMessage(channel, Type.INFO, format("There is no request for this guild. To create one, use `link request <name|id>`.",Bot.getPrefix(guild.getIdLong()))).queue();
             }
         } else if (args[0].equalsIgnoreCase("invite")) {
             if (running.containsKey(guild.getIdLong())) {
@@ -174,8 +172,7 @@ public class LinkCommand implements ICommand {
                     }
                 });
             } else {
-                sendMessage(channel, Type.INFO, "There are no active links to this guild. You may create one with " +
-                        "`" + Bot.getPrefix(guild.getIdLong()) + "link request <name|id>`.").queue();
+                sendMessage(channel, Type.INFO, format("There are no active links to this guild. You may create one with `%slink request <name|id>`.", Bot.getPrefix(guild.getIdLong()))).queue();
             }
         } else {
             wrongUsageMessage(channel, member, this);
@@ -264,8 +261,7 @@ public class LinkCommand implements ICommand {
         Reactions.newYesNoMenu(member.getUser(), channel, format("Do you want to add `%s - Owner: %#s` to your request?", guild, guild.getOwner().getUser()), (msg2) -> {
             guilds.add(guild);
             if (guilds.size() == 10) {
-                sendMessage(channel, Type.WARNING, "You've added 10 guilds to your request, that's the maximum for a link. " +
-                        "Though you may send more requests with the `link invite` command. Would you like to finish the request for now?").queue((msg) -> {
+                sendMessage(channel, Type.WARNING, "You've added 10 guilds to your request, that's the maximum for a link. Though you may send more requests with the `link invite` command. Would you like to finish the request for now?").queue((msg) -> {
                     Reactions.newYesNoMenu(member.getUser(), msg, (yes) -> finishRequest(guilds, channel, member));
                 });
             } else {

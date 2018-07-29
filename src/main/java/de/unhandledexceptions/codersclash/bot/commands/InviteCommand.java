@@ -16,6 +16,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import java.util.List;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.wrongUsageMessage;
+import static java.lang.String.format;
 
 /**
  * @author Johnny_JayJay
@@ -72,7 +73,7 @@ public class InviteCommand implements ICommand {
 
     @Override
     public String info(Member member) {
-        return "**Description**: Opens the invite dialogue where you can choose between an invite for the bot or this guild.\n\n**Usage**: `" + Bot.getPrefix(member.getGuild().getIdLong())
-                + "invite`\n\n**Permission level**: `1`";
+        return format("**Description**: Opens the invite dialogue where you can choose between an invite for the bot or this guild.\n\n**Usage**:" +
+                " `%sinvite`\n\n**Permission level**: `1`", Bot.getPrefix(member.getGuild().getIdLong()));
     }
 }

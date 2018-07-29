@@ -58,7 +58,7 @@ public class TicTacToeCommand implements ICommand {
     }
 
     private void waitForResponse(TextChannel channel, Member player1, Member player2, int size) {
-        Reactions.newYesNoMenu(player2.getUser(), channel, "Do you want to play against " + player1.getAsMention() + ", " + player2.getAsMention() + "?", (msg) -> {
+        Reactions.newYesNoMenu(player2.getUser(), channel, format("Do you want to play against %s, %s?", player1.getAsMention(), player2.getAsMention()), (msg) -> {
             Messages.sendMessage(channel, Messages.Type.NO_TYPE, "Starting game...").queue((msg2) -> game.start(msg2, player1, player2, size));
         }, true);
     }
