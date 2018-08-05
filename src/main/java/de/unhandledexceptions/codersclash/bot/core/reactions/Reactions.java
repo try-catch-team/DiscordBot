@@ -14,6 +14,8 @@ import net.dv8tion.jda.core.requests.RestAction;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -81,7 +83,7 @@ public class Reactions {
     public static void newYesNoMenu(User user, Message message, Consumer<Message> yes, Consumer<Message> no) {
         message.addReaction(YES_EMOTE).queue();
         message.addReaction(NO_EMOTE).queue();
-        user.getJDA().addEventListener(new ReactionListener(Set.of(YES_EMOTE, NO_EMOTE), (emoji) -> {
+        user.getJDA().addEventListener(new ReactionListener(user.getJDA(), Set.of(YES_EMOTE, NO_EMOTE), (emoji) -> {
             if (emoji.equals(YES_EMOTE))
                 yes.accept(message);
             else {
@@ -117,7 +119,7 @@ public class Reactions {
     }
 
     public static void newMenu(User user, Message message, Consumer<String> reacted, Collection<String> emojis, int waitSeconds, boolean removeListener) {
-        user.getJDA().addEventListener(new ReactionListener(emojis, reacted, user.getIdLong(), message.getIdLong(), waitSeconds, removeListener));
+        user.getJDA().addEventListener(new ReactionListener(user.getJDA(), emojis, reacted, user.getIdLong(), message.getIdLong(), waitSeconds, removeListener));
     }
 
     public static void newMenu(User user, Message message, Consumer<String> reacted, Collection<String> emojis, int waitSeconds) {
@@ -155,20 +157,17 @@ public class Reactions {
         private final long channelId;
         private final Consumer<Message> messageReceived;
         private Predicate<Message> condition;
-        private boolean receivedMessage;
+        private ScheduledFuture<?> scheduledRemoval;
 
         public MessageListener(JDA jda, long userId, long channelId, int waitSeconds, Consumer<Message> messageReceived, Consumer<Void> afterExpiration) {
-            Main.scheduleTask(() -> {
-                if (!receivedMessage) {
-                    jda.removeEventListener(this);
-                    afterExpiration.accept(null);
-                }
-            }, waitSeconds, TimeUnit.SECONDS);
             this.userId = userId;
             this.channelId = channelId;
             this.messageReceived = messageReceived;
-            this.receivedMessage = false;
             this.condition = (s) -> true;
+            this.scheduledRemoval = Main.scheduleTask(() -> {
+                jda.removeEventListener(this);
+                afterExpiration.accept(null);
+            }, waitSeconds, TimeUnit.SECONDS);
         }
 
         public void setCondition(Predicate<Message> condition) {
@@ -182,8 +181,8 @@ public class Reactions {
 
             Message message = event.getMessage();
             if (condition.test(message)) {
+                scheduledRemoval.cancel(true);
                 event.getJDA().removeEventListener(this);
-                this.receivedMessage = true;
                 messageReceived.accept(message);
             }
         }
@@ -195,27 +194,22 @@ public class Reactions {
         private Consumer<String> reacted;
         private long userId;
         private long messageId;
-        private boolean firstReaction;
         private boolean removeListener;
         private int waitSeconds;
+        private ScheduledFuture<?> scheduledRemoval;
 
-        ReactionListener(Collection<String> emojis, Consumer<String> reacted, long userId, long messageId, int waitSeconds, boolean removeListener) {
+        ReactionListener(JDA jda, Collection<String> emojis, Consumer<String> reacted, long userId, long messageId, int waitSeconds, boolean removeListener) {
             this.emojis = emojis;
             this.reacted = reacted;
             this.userId = userId;
             this.messageId = messageId;
             this.waitSeconds = waitSeconds;
             this.removeListener = removeListener;
-            this.firstReaction = true;
+            this.scheduledRemoval = Main.scheduleTask(() -> jda.removeEventListener(this), 30, TimeUnit.SECONDS);
         }
 
         @Override
         public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-            if (firstReaction) {
-                event.getChannel().getMessageById(event.getMessageIdLong()).queueAfter(waitSeconds, TimeUnit.SECONDS,
-                        (msg) -> event.getJDA().removeEventListener(this), (t) -> event.getJDA().removeEventListener(this));
-                firstReaction = false;
-            }
 
             User user = event.getUser();
 
@@ -237,8 +231,10 @@ public class Reactions {
                 if (contains) {
                     removeReaction.queue();
                     reacted.accept(emoji);
-                    if (removeListener)
+                    if (removeListener) {
                         event.getJDA().removeEventListener(this);
+                        scheduledRemoval.cancel(true);
+                    }
                 }
             }
         }

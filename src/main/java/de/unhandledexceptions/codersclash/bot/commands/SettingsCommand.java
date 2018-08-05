@@ -172,14 +172,21 @@ public class SettingsCommand implements ICommand {
                                 builder.setTitle("Change AutoChannel").setDescription("Enter the new AutoChannel now!");
                                 message.editMessage(builder.build()).queue();
                                 Reactions.newMessageWaiter(user, textChannel, 30, (msg) -> {
-                                    msg.delete().queue();
-                                    Reactions.newYesNoMenu(user, message.getTextChannel(), "Do you want to set" + Reactions.SPEAKER+  "`" + msg.getContentRaw() + "` as the new AutoChannel?", (m) -> {
-                                        m.delete().queue();
-                                        discord_guild.setAuto_channel(guild.getVoiceChannelsByName(msg.getContentRaw(), false).get(0).getIdLong());
-                                        VoiceChannel voiceChannel = guild.getVoiceChannelById(discord_guild.getAuto_channel());
-                                        sendMessage(textChannel, Type.SUCCESS, format("AutoChannel successfully set to\n" + Reactions.SPEAKER + "`%s (%s)`", voiceChannel.getName(), voiceChannel.getId())).queue(Messages::deleteAfterFiveSec);
-                                        menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder);
-                                    }, (m) -> menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder));
+                                    List<String> availableChannels = guild.getVoiceChannelsByName(msg.getContentDisplay(), true).stream().map((vc) -> "`" + vc.getName() + " (" + vc.getId() + ")`").collect(Collectors.toList());
+                                    if (availableChannels.isEmpty()) {
+                                        sendMessage(textChannel, Type.ERROR, "No voice channels found with that name").queue(Messages::deleteAfterFiveSec);
+                                        menu(user, message, Layer.MAIN_MENU, current, builder);
+                                    } else {
+                                        ListDisplay.displayListSelection(availableChannels, message, user, 10, (selected) -> {
+                                            String id = selected.replaceAll("(.*\\()|[`\\)]", "");
+                                            Reactions.newYesNoMenu(user, textChannel, "Do you want to set " + selected + " as the new auto channel?", (yes) -> {
+                                                discord_guild.setAuto_channel(Long.parseLong(id));
+                                                sendMessage(textChannel, Type.SUCCESS, "Changes were successful!").queue(Messages::deleteAfterFiveSec);
+                                                menu(user, message, Layer.MAIN_MENU, current, builder);
+                                            }, (no) -> menu(user, message, Layer.MAIN_MENU, current, builder), true);
+                                        }, (aVoid) -> menu(user, message, Layer.MAIN_MENU, current, builder));
+                                        msg.delete().queue();
+                                    }
                                 }, (v3) -> {
                                     sendMessage(textChannel, Type.WARNING, "Your channel change request expired.").queue(Messages::deleteAfterFiveSec);
                                     menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder);
@@ -189,10 +196,8 @@ public class SettingsCommand implements ICommand {
                                 List<String> channels = guild.getVoiceChannelCache().stream().map((voiceChannel -> format(Reactions.SPEAKER + "`%s (%s)`", voiceChannel.getName(), voiceChannel.getId()))).collect(Collectors.toList());
                                 message.clearReactions().queue((aVoid) -> {
                                     ListDisplay.displayListSelection(channels, message, user, channels.size() > 50 ? 20 : 10, (selected) -> {
-                                        var matcher = FIND_ID.matcher(selected);
-                                        matcher.find();
-                                        var channel = guild.getVoiceChannelById(matcher.group().replaceAll("[\\(\\)]", ""));
-                                        discord_guild.setAuto_channel(channel.getIdLong());
+                                        String id = selected.replaceAll("(" + Reactions.SPEAKER + ".* \\()|[`\\)]", "");
+                                        discord_guild.setAuto_channel(Long.parseLong(id));
                                         sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully set to\n" + selected).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder);
                                     }, (anotherVoid) -> menu(user, message, Layer.MAIN_MENU, Layer.AUTO_CHANNEL, builder));
@@ -226,18 +231,17 @@ public class SettingsCommand implements ICommand {
                                         sendMessage(textChannel, Type.WARNING, "AutoChannel is not set.").queue(Messages::deleteAfterFiveSec);
                                     } else {
                                         Reactions.newYesNoMenu(user, textChannel, "Do you want to delete the AutoChannel too?", (yes) -> {
-                                            guild.getVoiceChannelById(discord_guild.getAuto_channel()).delete().queue();
-                                            yes.delete().queue();
-                                            discord_guild.setAuto_channel(0);
-                                            sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully reset and deleted.").queue(Messages::deleteAfterFiveSec);
+                                            guild.getVoiceChannelById(discord_guild.getAuto_channel()).delete().queue((success) -> {
+                                                discord_guild.setAuto_channel(0);
+                                                sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully reset and deleted.").queue(Messages::deleteAfterFiveSec);
+                                            }, Messages.defaultFailure(textChannel));
                                         }, (no) -> {
                                             discord_guild.setAuto_channel(0);
                                             sendMessage(textChannel, Type.SUCCESS, "AutoChannel successfully reset.").queue(Messages::deleteAfterFiveSec);
-                                        });
+                                        }, true);
                                     }
-                                    msg.delete().queue();
                                     menu(user, message, Layer.MAIN_MENU, current, builder);
-                                }, (v3) -> menu(user, message, Layer.MAIN_MENU, current, builder));
+                                }, (v3) -> menu(user, message, Layer.MAIN_MENU, current, builder), true);
                         }
                         break;
                     case MAIL_CHANNEL:
@@ -263,8 +267,8 @@ public class SettingsCommand implements ICommand {
                                 List<String> channels = guild.getTextChannelCache().stream().map(TextChannel::getAsMention).collect(Collectors.toList());
                                 message.clearReactions().queue((aVoid) -> {
                                     ListDisplay.displayListSelection(channels, message, user, channels.size() > 50 ? 20 : 10, (selected) -> {
-                                        var channel = guild.getTextChannelById(selected.replaceAll("[<>#]", ""));
-                                        discord_guild.setMail_channel(channel.getIdLong());
+                                        String id = selected.replaceAll("[<>#]", "");
+                                        discord_guild.setMail_channel(Long.parseLong(id));
                                         sendMessage(textChannel, Type.SUCCESS, "Mail Channel successfully set to " + selected).queue(Messages::deleteAfterFiveSec);
                                         menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder);
                                     }, (anotherVoid) -> menu(user, message, Layer.MAIN_MENU, Layer.MAIL_CHANNEL, builder));
@@ -350,7 +354,7 @@ public class SettingsCommand implements ICommand {
                         + "\n" + Reactions.Y + " Yes\n");
                 break;
             case REPORTS:
-                int currentValue = bot.getCaching().getGuilds().get(message.getGuild()).getReports_until_ban();
+                int currentValue = bot.getCaching().getGuilds().get(message.getGuild().getIdLong()).getReports_until_ban();
                 builder.setTitle("Report System");
                 builder.appendDescription(currentValue == 11
                         ? "Currently, members will not be banned for reports."
@@ -373,7 +377,7 @@ public class SettingsCommand implements ICommand {
                                 + Reactions.Y + " Yes, let me set a new prefix\n");
                 break;
             case AUTO_CHANNEL:
-                Long idAuto = bot.getCaching().getGuilds().get(message.getGuild()).getAuto_channel();
+                Long idAuto = bot.getCaching().getGuilds().get(message.getGuild().getIdLong()).getAuto_channel();
                 String currentAutoChannel;
                 if (idAuto != null && message.getGuild().getVoiceChannelById(idAuto) != null)
                     currentAutoChannel = "`" + message.getGuild().getVoiceChannelById(idAuto).getName() + "`";

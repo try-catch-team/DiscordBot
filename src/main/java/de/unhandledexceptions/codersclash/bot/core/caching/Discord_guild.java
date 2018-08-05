@@ -14,10 +14,10 @@ public class Discord_guild {
     private boolean xp_system_activated;
     private String prefix;
     private long guild_id;
-    private long mail_channel;
-    private long auto_channel;
+    private Long mail_channel;
+    private Long auto_channel;
 
-    public Discord_guild(int reports_until_ban, boolean xp_system_activated, String prefix, long guild_id, long mail_channel, long auto_channel) {
+    public Discord_guild(int reports_until_ban, boolean xp_system_activated, String prefix, long guild_id, Long mail_channel, Long auto_channel) {
         this.reports_until_ban = reports_until_ban;
         this.xp_system_activated = xp_system_activated;
         this.prefix = prefix;
@@ -66,11 +66,11 @@ public class Discord_guild {
         return guild_id;
     }
 
-    public long getMail_channel() {
+    public Long getMail_channel() {
         return mail_channel;
     }
 
-    public long getAuto_channel() {
+    public Long getAuto_channel() {
         return auto_channel;
     }
 }
