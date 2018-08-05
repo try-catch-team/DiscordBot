@@ -7,6 +7,7 @@ import de.unhandledexceptions.codersclash.bot.commands.ScoreBoardCommand;
 import de.unhandledexceptions.codersclash.bot.core.caching.*;
 import de.unhandledexceptions.codersclash.bot.util.Logging;
 import net.dv8tion.jda.bot.sharding.ShardManager;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
@@ -143,11 +144,18 @@ public class Database {
     }
 
     public Caching readall(Caching caching, Bot bot) {
-        ShardManager manager = bot.getAPI();
-        caching.getGuilds().clear();
-        caching.getMember().clear();
-        caching.getUser().clear();
-        for (Guild guild:manager.getGuilds()) {
+        return readall(caching, bot.getAPI());
+    }
+
+    public Caching readall(Caching caching, ShardManager shardManager) {
+        for (JDA jda:shardManager.getShards()) {
+            readall(caching, jda);
+        }
+        return caching;
+    }
+
+    public Caching readall(Caching caching, JDA jda) {
+        for (Guild guild:jda.getGuilds()) {
             try (var connection = dataSource.getConnection();
                  var preparedstatement = connection.prepareStatement("SELECT * FROM Discord_guild WHERE guild_id="+guild.getIdLong()+";")) {
                 var resultset = preparedstatement.executeQuery();
@@ -171,7 +179,7 @@ public class Database {
                 }
             }
         }
-        for (User user:manager.getUsers()) {
+        for (User user:jda.getUsers()) {
             try (var connection = dataSource.getConnection();
                  var preparedstatement = connection.prepareStatement("SELECT * FROM `Discord_user` WHERE `user_id`="+user.getId())) {
                 var resultset = preparedstatement.executeQuery();
