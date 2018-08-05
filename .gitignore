@@ -4,4 +4,5 @@ target/*
 bot-master.iml
 config.yml
 config.json
+try-catch (1).iml
 *.properties
