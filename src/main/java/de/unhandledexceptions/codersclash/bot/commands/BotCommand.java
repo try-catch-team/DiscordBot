@@ -5,9 +5,15 @@ import com.github.johnnyjayjay.discord.commandapi.ICommand;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Config;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
+
+import java.util.ArrayList;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 import static de.unhandledexceptions.codersclash.bot.util.Messages.wrongUsageMessage;
@@ -51,9 +57,28 @@ public class BotCommand implements ICommand {
                         if (args.length==2) {
                             switch (args[1].toLowerCase()) {
                                 case "read":
-                                    sendMessage(channel, Messages.Type.WARNING, "Reading DB...", "caching", true).queue();
-                                    bot.getCaching().readall();
-                                    sendMessage(channel, Messages.Type.SUCCESS, "Read DB!", "caching", true).queue();
+                                    sendMessage(channel, Messages.Type.WARNING, "Reading DB...", "Reading DB...", true).queue(
+                                            msg -> {
+                                                for (JDA jda : bot.getAPI().getShards()) {
+                                                    msg.editMessage(new EmbedBuilder(msg.getEmbeds().get(0)).addField("Shard "+jda.getShardInfo().getShardId(), "Reading...", true).build()).queue();
+                                                    msg = msg.getChannel().getMessageById(msg.getId()).complete();
+                                                    bot.getCaching().clearfromjda(jda).readall(jda);
+                                                    ArrayList<MessageEmbed.Field> fields = new ArrayList<>(msg.getEmbeds().get(0).getFields());
+                                                    MessageEmbed.Field edit = fields.get(fields.size()-1);
+                                                    EmbedBuilder builder =new EmbedBuilder(msg.getEmbeds().get(0)).clearFields();
+                                                    for (MessageEmbed.Field field: fields) {
+                                                        if (field != edit) {
+                                                            builder.addField(field);
+                                                        } else {
+                                                            builder.addField(edit.getName(), "Read!", true);
+                                                        }
+                                                    }
+                                                    msg.editMessage(builder.build()).queue();
+                                                    msg = msg.getChannel().getMessageById(msg.getId()).complete();
+                                                }
+                                            }
+                                    );
+
                                     break;
                                 case "updatedb":
                                     sendMessage(channel, Messages.Type.WARNING, "Updating DB...", "caching", true).queue();
