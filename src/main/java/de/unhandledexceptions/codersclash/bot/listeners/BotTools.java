@@ -73,7 +73,7 @@ public class BotTools extends ListenerAdapter {
                     bot.getCaching().updateDB();
                     sendMessage(channel, Messages.Type.SUCCESS, "Database successfully updated!", "Caching", true).queue();
                 }
-            } else if (event.getMessage().getContentRaw().matches(prefix + "(?i)bot (perms|checkperms|permscheck) ")) {
+            } else if (event.getMessage().getContentRaw().matches(prefix + "(?i)bot ((perms)|(checkperms)|(permscheck))")) {
                 StringBuilder stringBuilder = new StringBuilder();
                 for (Permission permission: Permission.values()) {
                     stringBuilder.append(((event.getGuild().getSelfMember().hasPermission(permission)) ? "✅" : "❌") +" "+ permission.getName()+ "\n");

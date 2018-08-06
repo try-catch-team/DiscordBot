@@ -81,7 +81,7 @@ public class Management extends ListenerAdapter {
                         }
                     }
                 }
-            } else if (event.getMessage().getContentRaw().matches(prefix + "(?i)manage (commandsettings|cs) ((activate|on)|(deactivate|off))")) {
+            } else if (event.getMessage().getContentRaw().matches(prefix + "(?i)manage ((commandsettings)|(cs)) (((activate)|(on))|((deactivate)|(off)))")) {
                 if (args[1].equalsIgnoreCase("deactivate") || args[1].equalsIgnoreCase("off")) {
                     if (!bot.getCommandSettings().isActivated()) {
                         sendMessage(event.getChannel(), Type.SUCCESS, format("`CommandSettings` already %s", deactivated)).queue();

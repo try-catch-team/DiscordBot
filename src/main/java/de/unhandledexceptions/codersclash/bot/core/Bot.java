@@ -110,7 +110,7 @@ public class Bot {
                 .activate();
 
         listeners.addAll(List.of(voteCommand, xpCommand, new DatabaseListener(this, shardManager, database, caching), new MentionListener(config),
-                new ReadyListener(config), new Management(this), linkListener, new AutoChannelListener(this)), new BotTools(config, this));
+                new ReadyListener(config), new Management(this), linkListener, new AutoChannelListener(this), new BotTools(config, this)));
         listeners.forEach(shardManager::addEventListener);
     }
 
