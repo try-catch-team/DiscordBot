@@ -99,7 +99,9 @@ public class Management extends ListenerAdapter {
                      }
                 }
             } else if (event.getMessage().getContentRaw().matches(regexWrongUsage))
-                sendMessage(event.getChannel(), Type.WARNING, "Wrong Usage.").queue((msg) -> msg.delete().queueAfter(10, TimeUnit.SECONDS));
+                sendMessage(event.getChannel(), Type.WARNING,
+                        format("**Usage**: `%smanage status [complete|<shard>]`\n\t\t\t `%smanage restart [complete|<shard>]`" +
+                                "\n\t\t\t `%smanage shutdown [complete|<shard>]`\n\t\t\t `%smanage [commandsettings|cs] [activate|on]|[deactivate|off]`\n\n**Bot Owners only.**", prefix, prefix, prefix, prefix)).queue();
         } else if (event.getMessage().getContentRaw().matches(regex) || event.getMessage().getContentRaw().matches(regexWrongUsage))
             sendMessage(event.getChannel(), Type.ERROR, format("Nothing to see here. **Bot Owners only.** %s", event.getMember().getAsMention())).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
     }

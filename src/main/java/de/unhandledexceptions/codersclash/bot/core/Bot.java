@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 public class Bot {
 
@@ -106,13 +105,12 @@ public class Bot {
                 .put(new TicTacToeCommand(ticTacToe), "ttt", "tictactoe")
                 .put(voteCommand, "vote", "poll")
                 .put(xpCommand, "xp", "level", "lvl")
-                .put(new BotCommand(config, this), "bot", "owner")
                 .getCommandSettings()
                 .setCooldown(config.getCommandCooldown())
                 .activate();
 
         listeners.addAll(List.of(voteCommand, xpCommand, new DatabaseListener(this, shardManager, database, caching), new MentionListener(config),
-                new ReadyListener(config), new Management(this), linkListener, new AutoChannelListener(this)));
+                new ReadyListener(config), new Management(this), linkListener, new AutoChannelListener(this)), new BotTools(config, this));
         listeners.forEach(shardManager::addEventListener);
     }
 

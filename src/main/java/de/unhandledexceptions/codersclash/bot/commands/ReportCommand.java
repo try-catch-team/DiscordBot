@@ -124,11 +124,11 @@ public class ReportCommand implements ICommand {
     public String info(Member member) {
         String prefix = Bot.getPrefix(member.getGuild().getIdLong());
         String retNoBan = format("**Description**: Reports a given member. A member will not be banned after a certain amount of report. To change this, make use of the settings command.\n\n" +
-                        "**Usage**: `%s[report|rep] @Member <reason>` to *report* \n\t\t\t  `%s[report|rep] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
+                        "**Usage**: `%s[report|rep] @Member <reason>` to *report*\n\t\t\t  `%s[report|rep] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
                         "level**: `3`",
                 prefix, prefix);
         String retWithBan = format("**Description**: Reports a given member. After `%d` reports, a member will be banned. To change this, make use of the settings command.\n\n" +
-                        "**Usage**: `%s[report|rep] @Member <reason>` to *report* \n\t\t\t  `%s[report|rep] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
+                        "**Usage**: `%s[report|rep] @Member <reason>` to *report*\n\t\t\t  `%s[report|rep] [get|remove] @Member <index>` to *manage*\n\n**Permission " +
                         "level**: `3`",
                 database.getReportsUntilBan(member.getGuild()), prefix, prefix);
         return (database.getReportsUntilBan(member.getGuild()) == (11)) ? retNoBan : retWithBan;
