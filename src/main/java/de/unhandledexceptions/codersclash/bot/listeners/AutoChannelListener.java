@@ -83,7 +83,7 @@ public class AutoChannelListener extends ListenerAdapter {
                     });
         } else {
            PrivateChannel pc = member.getUser().openPrivateChannel().complete();
-           sendMessage(pc, Messages.Type.ERROR, "Woops. It seems like I don't have permission to do that on :satellite:" + guild.getName() + "!\n:x:Manage Channels").queue();
+           sendMessage(pc, Messages.Type.ERROR, format("Woops. It seems like I don't have permission to do that on\n:satellite:*%s*!\n:x: **Manage Channels**", guild.getName()).queue();
         }
     }
 }
