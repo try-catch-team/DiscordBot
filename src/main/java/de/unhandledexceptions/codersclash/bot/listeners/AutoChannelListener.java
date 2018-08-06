@@ -3,9 +3,11 @@ package de.unhandledexceptions.codersclash.bot.listeners;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Database;
 import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
+import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
@@ -15,6 +17,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import java.util.HashSet;
 import java.util.Set;
 
+import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 import static java.lang.String.format;
 
 /**
@@ -69,7 +72,7 @@ public class AutoChannelListener extends ListenerAdapter {
                         guild.getController().moveVoiceMember(member, (VoiceChannel) channel).queue();
                         channel.createPermissionOverride(member).setAllow(Permission.ALL_CHANNEL_PERMISSIONS).queue();
                         guild.getController().createTextChannel("channel-by-" + member.getUser().getName())
-                                .setTopic(format("This Channel is linked to the same-named Voice Channel %s %s (%s) by %s. Only people that joined the Voice Channel have access to this one.", Reactions.SPEAKER,
+                                .setTopic(format("This Channel is linked to the same-named Voice Channel %s %s (%s) by %s. Only the creator of the Voice Channel has permissions here.", Reactions.SPEAKER,
                                         channel.getName(), channel.getId(), member.getUser())).queue((textChannel) -> {
                                     textChannel.createPermissionOverride(guild.getPublicRole()).setDeny(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                                     textChannel.createPermissionOverride(member).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
@@ -78,6 +81,9 @@ public class AutoChannelListener extends ListenerAdapter {
                         );
 
                     });
+        } else {
+           PrivateChannel pc = member.getUser().openPrivateChannel().complete();
+           sendMessage(pc, Messages.Type.ERROR, "Woops. It seems like I don't have permission to do that on :satellite:" + guild.getName() + "!\n:x:Manage Channels").queue();
         }
     }
 }
