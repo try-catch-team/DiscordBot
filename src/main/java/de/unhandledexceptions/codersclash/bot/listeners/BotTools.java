@@ -48,7 +48,7 @@ public class BotTools extends ListenerAdapter {
             if (event.getMessage().getContentRaw().matches(regex)) {
                 var channel = event.getChannel();
                 if (args[1].equalsIgnoreCase("read")) {
-                    sendMessage(channel, Messages.Type.WARNING, "Reading DB...", "Reading DB...", true).queue(
+                    sendMessage(channel, Messages.Type.WARNING, null, "Reading DB...", true).queue(
                             msg -> {
                                 for (JDA jda : bot.getAPI().getShards()) {
                                     msg.editMessage(new EmbedBuilder(msg.getEmbeds().get(0)).addField("Shard " + jda.getShardInfo().getShardId(), "Reading...", true).build()).queue();
