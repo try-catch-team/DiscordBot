@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +61,10 @@ public class BotTools extends ListenerAdapter {
                                         if (field != edit) {
                                             builder.addField(field);
                                         } else {
-                                            builder.addField(edit.getName(), "Read!", true);
+                                            builder.addField(edit.getName(), "Done!", true)
+                                                    .setFooter("Success", "https://cdn.pixabay.com/photo/2012/04/11/17/44/check-mark-29114_960_720.png")
+                                                    .setColor(Color.GREEN)
+                                                    .setTitle("Database has been read!");
                                         }
                                     }
                                     msg.editMessage(builder.build()).queue();
