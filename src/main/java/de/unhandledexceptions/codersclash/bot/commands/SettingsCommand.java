@@ -179,7 +179,7 @@ public class SettingsCommand implements ICommand {
                                     } else {
                                         ListDisplay.displayListSelection(availableChannels, message, user, 10, (selected) -> {
                                             String id = selected.replaceAll("(.*\\()|[`\\)]", "");
-                                            Reactions.newYesNoMenu(user, textChannel, "Do you want to set " + selected + " as the new auto channel?", (yes) -> {
+                                            Reactions.newYesNoMenu(user, textChannel, "Do you want to set " + Reactions.SPEAKER + selected + " as the new auto channel?", (yes) -> {
                                                 discord_guild.setAuto_channel(Long.parseLong(id));
                                                 sendMessage(textChannel, Type.SUCCESS, "Changes were successful!").queue(Messages::deleteAfterFiveSec);
                                                 menu(user, message, Layer.MAIN_MENU, current, builder);
