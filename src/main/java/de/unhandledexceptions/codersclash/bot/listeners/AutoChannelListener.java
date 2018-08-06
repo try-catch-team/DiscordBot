@@ -1,8 +1,7 @@
 package de.unhandledexceptions.codersclash.bot.listeners;
 
 import de.unhandledexceptions.codersclash.bot.core.Bot;
-import de.unhandledexceptions.codersclash.bot.core.Database;
-import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
+import de.unhandledexceptions.codersclash.bot.entities.AutoChannel;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
@@ -14,8 +13,7 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 import static java.lang.String.format;
@@ -27,7 +25,7 @@ import static java.lang.String.format;
 
 public class AutoChannelListener extends ListenerAdapter {
 
-    private Set<VoiceChannel> channels = new HashSet<>();
+    private HashMap<Long, AutoChannel> channels = new HashMap<>();
     private Bot bot;
 
     public AutoChannelListener(Bot bot) {
@@ -41,22 +39,22 @@ public class AutoChannelListener extends ListenerAdapter {
             createChannel(joined, event.getGuild(), event.getMember());
         } else {
             if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL))
-                event.getGuild().getTextChannelsByName(joined.getName(), true).get(0)
-                        .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
+                if (channels.containsKey(joined.getIdLong()))
+                    channels.get(joined.getIdLong()).getTextChannel()
+                            .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
         }
     }
 
     @Override
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         var left = event.getChannelLeft();
-        if (channels.contains(left) && left.getMembers().isEmpty()) {
-            left.delete().queue((v) -> channels.remove(left));
-            if (!event.getGuild().getTextChannelsByName("channel-by-" + event.getMember().getUser().getName().toLowerCase(), true).isEmpty()) {
-                event.getGuild().getTextChannelsByName("channel-by-" + event.getMember().getUser().getName().toLowerCase(), true).get(0).delete().queue();
-            }
+        if (channels.containsKey(left.getIdLong()) && left.getMembers().isEmpty()) {
+            left.delete().queue((v) -> channels.remove(left.getIdLong()));
+            channels.get(left.getIdLong()).getTextChannel().delete().queue();
         }
         if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL))
-            event.getGuild().getTextChannelsByName(left.getName(), true).get(0)
+            if (channels.containsKey(left.getIdLong()))
+            channels.get(left.getIdLong()).getTextChannel()
                     .getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
     }
 
@@ -64,19 +62,19 @@ public class AutoChannelListener extends ListenerAdapter {
     public void onGuildVoiceMove(GuildVoiceMoveEvent event) {
         var left = event.getChannelLeft();
         var joined = event.getChannelJoined();
-        if (channels.contains(left) && left.getMembers().isEmpty()) {
-            left.delete().queue((v) -> channels.remove(left));
-            if (!event.getGuild().getTextChannelsByName("channel-by-" + event.getMember().getUser().getName().toLowerCase(), true).isEmpty()) {
-            event.getGuild().getTextChannelsByName("channel-by-" + event.getMember().getUser().getName().toLowerCase(), true).get(0).delete().queue();
-            }
+        if (channels.containsKey(left.getIdLong()) && left.getMembers().isEmpty()) {
+            left.delete().queue((v) -> channels.remove(left.getIdLong()));
+            channels.get(left.getIdLong()).getTextChannel().delete().queue();
         }
         if (joined.getIdLong() == bot.getCaching().getGuilds().get(event.getGuild().getIdLong()).getAuto_channel())
             createChannel(joined, event.getGuild(), event.getMember());
-        if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            event.getGuild().getTextChannelsByName(left.getName(), true).get(0)
-                    .getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
-            event.getGuild().getTextChannelsByName(joined.getName(), true).get(0)
-                    .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
+        else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
+            if (channels.containsKey(left.getIdLong())) {
+                channels.get(left.getIdLong()).getTextChannel()
+                        .getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
+                channels.get(joined.getIdLong()).getTextChannel()
+                        .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
+            }
         }
     }
 
@@ -86,11 +84,11 @@ public class AutoChannelListener extends ListenerAdapter {
                     .setUserlimit(channelJoined.getUserLimit())
                     .setParent(channelJoined.getParent())
                     .queue((channel) -> {
-                        channels.add((VoiceChannel) channel);
                         guild.getController().moveVoiceMember(member, (VoiceChannel) channel).queue();
                         channel.createPermissionOverride(member).setAllow(Permission.ALL_CHANNEL_PERMISSIONS).queue();
                         guild.getController().createTextChannel("channel-by-" + member.getUser().getName())
                                 .setTopic(format("This Channel is linked to the same-named Voice Channel by %s. Only people in the Voice Channel have access to this one.", member.getUser())).queue((textChannel) -> {
+                                    channels.put(channel.getIdLong(), new AutoChannel(channel.getIdLong(), textChannel.getIdLong(), member.getUser().getIdLong(), channelJoined.getJDA()));
                                     textChannel.createPermissionOverride(guild.getPublicRole()).setDeny(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                                     textChannel.createPermissionOverride(member).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                                 }
