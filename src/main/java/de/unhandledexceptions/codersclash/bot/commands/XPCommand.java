@@ -106,7 +106,7 @@ public class XPCommand extends ListenerAdapter implements ICommand {
             GuildMessageReactionAddEvent event = (GuildMessageReactionAddEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
                 if (!msg.getAuthor().isBot()) {
-                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getMember().getUser().getIdLong());
+                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getGuild().getIdLong()+" "+msg.getMember().getUser().getIdLong());
                     Discord_user discord_user = bot.getCaching().getUser().get(msg.getMember().getUser().getIdLong());
                     discord_member.setMember_xp(discord_member.getMember_xp()+1);
                     discord_user.setUser_xp(discord_user.getUser_xp()+1);
@@ -116,7 +116,7 @@ public class XPCommand extends ListenerAdapter implements ICommand {
             GuildMessageReactionRemoveEvent event = (GuildMessageReactionRemoveEvent) origevent;
             event.getChannel().getMessageById(event.getMessageIdLong()).queue((msg) -> {
                 if (!msg.getAuthor().isBot()) {
-                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getMember().getUser().getIdLong());
+                    Discord_member discord_member = bot.getCaching().getMember().get(msg.getGuild().getIdLong()+" "+msg.getMember().getUser().getIdLong());
                     Discord_user discord_user = bot.getCaching().getUser().get(msg.getMember().getUser().getIdLong());
                     discord_member.setMember_xp(discord_member.getMember_xp()-1);
                     discord_user.setUser_xp(discord_user.getUser_xp()-1);
