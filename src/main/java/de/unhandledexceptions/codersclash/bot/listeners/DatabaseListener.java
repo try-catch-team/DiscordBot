@@ -49,17 +49,17 @@ public class DatabaseListener extends ListenerAdapter {
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
         logger.info("Left guild \"" + event.getGuild().getName() + "\" (" + event.getGuild().getId() + ")");
-        bot.getCaching().getGuilds().remove(event.getGuild().getIdLong());
+        bot.getCaching().getGuilds().remove(bot.getCaching().getGuilds().get(event.getGuild().getIdLong()));
     }
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        bot.getCaching().getMember().remove(event.getUser().getIdLong()+" "+event.getGuild().getIdLong());
+        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
     }
 
     @Override
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-        bot.getCaching().getMember().remove(event.getUser().getIdLong()+" "+event.getGuild().getIdLong());
+        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
     }
 
     @Override
@@ -122,17 +122,17 @@ public class DatabaseListener extends ListenerAdapter {
         Map<Long, Set<Long>> expectedMembers = database.getMembers();
         logger.debug("Expected members: " + expectedMembers);
         expectedMembers.forEach((guildId, userIds) -> {
-                    logger.debug("GuildID: " + guildId + " Users: " + userIds);
-                    if (shardManager.getGuildById(guildId) == null) {
-                        logger.debug("Guild wird gelöscht");
-                        database.deleteGuild(guildId);
-                    } else {
-                        userIds.stream().filter((userId) -> shardManager.getGuildById(guildId).getMemberById(userId) == null).forEach((userId) -> {
-                            database.deleteMember(guildId, userId);
-                            logger.debug("Member mit id " + userId + " wird gelöscht");
-                        });
-                    }
+            logger.debug("GuildID: " + guildId + " Users: " + userIds);
+            if (shardManager.getGuildById(guildId) == null) {
+                logger.debug("Guild wird gelöscht");
+                database.deleteGuild(guildId);
+            } else {
+                userIds.stream().filter((userId) -> shardManager.getGuildById(guildId).getMemberById(userId) == null).forEach((userId) -> {
+                    database.deleteMember(guildId, userId);
+                    logger.debug("Member mit id " + userId + " wird gelöscht");
                 });
+            }
+        });
         logger.debug("Inserting new Guilds and members");
         shardManager.getGuildCache().forEach((guild) ->
                 guild.getMemberCache().forEach((member) ->
