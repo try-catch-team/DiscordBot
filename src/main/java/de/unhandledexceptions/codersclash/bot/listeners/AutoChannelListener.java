@@ -68,8 +68,9 @@ public class AutoChannelListener extends ListenerAdapter {
             createChannel(joined, event.getGuild(), event.getMember());
         else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
             if (channels.containsKey(left.getIdLong())) {
-                channels.get(left.getIdLong()).getTextChannel()
-                        .getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
+                if (channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()).isMemberOverride()) {
+                    channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
+                }
                 channels.get(joined.getIdLong()).getTextChannel()
                         .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
             }
@@ -86,7 +87,7 @@ public class AutoChannelListener extends ListenerAdapter {
                         channel.createPermissionOverride(member).setAllow(Permission.ALL_CHANNEL_PERMISSIONS).queue();
                         guild.getController().createTextChannel("channel by " + member.getUser().getName())
                                 .setParent(channelJoined.getParent())
-                                .setTopic(format("This Channel is linked to %s `%s` by %s.", Reactions.SPEAKER, channel.getName(),
+                                .setTopic(format("This Channel is linked to %s **%s** by %s.", Reactions.SPEAKER, channel.getName(),
                                         member.getUser())).queue((textChannel) -> {
                                             channels.put(channel.getIdLong(), new AutoChannel(channel.getIdLong(), textChannel.getIdLong(), member.getUser().getIdLong(), channelJoined.getJDA()));
                                             textChannel.createPermissionOverride(guild.getPublicRole()).setDeny(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
