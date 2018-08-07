@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.sendMessage;
 import static java.lang.String.format;
+import static java.lang.String.join;
 
 /**
  * @author TheRealYann
@@ -67,7 +68,7 @@ public class AutoChannelListener extends ListenerAdapter {
         if (joined.getIdLong() == bot.getCaching().getGuilds().get(event.getGuild().getIdLong()).getAuto_channel())
             createChannel(joined, event.getGuild(), event.getMember());
         else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            if (channels.containsKey(left.getIdLong())) {
+            if (channels.containsKey(left.getIdLong()) && channels.containsKey(joined.getIdLong())) {
                 if (channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()) != null) {
                     channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
                 }

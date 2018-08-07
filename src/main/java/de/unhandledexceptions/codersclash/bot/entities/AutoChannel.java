@@ -33,7 +33,6 @@ public class AutoChannel {
     }
 
     public void addUser(User user) {
-
         users.add(user.getIdLong());
     }
 
