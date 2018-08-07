@@ -68,13 +68,15 @@ public class AutoChannelListener extends ListenerAdapter {
         if (joined.getIdLong() == bot.getCaching().getGuilds().get(event.getGuild().getIdLong()).getAuto_channel())
             createChannel(joined, event.getGuild(), event.getMember());
         else if (event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            if (channels.containsKey(left.getIdLong()) && channels.containsKey(joined.getIdLong())) {
+            if (channels.containsKey(left.getIdLong())) {
                 if (channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()) != null) {
                     channels.get(left.getIdLong()).getTextChannel().getManager().getChannel().getPermissionOverride(event.getMember()).delete().queue();
                 }
+            }
+            if (channels.containsKey(joined.getIdLong()))
                 channels.get(joined.getIdLong()).getTextChannel()
                         .putPermissionOverride(event.getMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
-            }
+
         }
     }
 
