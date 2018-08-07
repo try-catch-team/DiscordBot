@@ -49,17 +49,17 @@ public class DatabaseListener extends ListenerAdapter {
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
         logger.info("Left guild \"" + event.getGuild().getName() + "\" (" + event.getGuild().getId() + ")");
-        bot.getCaching().getGuilds().remove(bot.getCaching().getGuilds().get(event.getGuild().getIdLong()));
+        bot.getCaching().getGuilds().remove(event.getGuild().getIdLong());
     }
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
+        bot.getCaching().getMember().remove(event.getUser().getIdLong()+" "+event.getGuild().getIdLong());
     }
 
     @Override
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-        bot.getCaching().getMember().remove(bot.getCaching().getMember().get(event.getUser().getIdLong()+" "+event.getGuild().getIdLong()));
+        bot.getCaching().getMember().remove(event.getUser().getIdLong()+" "+event.getGuild().getIdLong());
     }
 
     @Override

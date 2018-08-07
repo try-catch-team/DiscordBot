@@ -87,6 +87,7 @@ public class AutoChannelListener extends ListenerAdapter {
                         guild.getController().moveVoiceMember(member, (VoiceChannel) channel).queue();
                         channel.createPermissionOverride(member).setAllow(Permission.ALL_CHANNEL_PERMISSIONS).queue();
                         guild.getController().createTextChannel("channel-by-" + member.getUser().getName())
+                                .setParent(channelJoined.getParent())
                                 .setTopic(format("This Channel is linked to the same-named Voice Channel by %s. Only people in the Voice Channel have access to this one.", member.getUser())).queue((textChannel) -> {
                                     channels.put(channel.getIdLong(), new AutoChannel(channel.getIdLong(), textChannel.getIdLong(), member.getUser().getIdLong(), channelJoined.getJDA()));
                                     textChannel.createPermissionOverride(guild.getPublicRole()).setDeny(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
