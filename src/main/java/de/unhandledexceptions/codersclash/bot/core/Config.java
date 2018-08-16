@@ -87,7 +87,7 @@ public class Config {
                 .key("DB_NAME").value(null)
                 .key("USERNAME").value(null)
                 .key("PASSWORD").value(null).endObject()
-                .endObject().toString();
+                .endObject().toString(2);
     }
 
     private boolean hasAnyNullValue(JSONObject objectToCheck) {
