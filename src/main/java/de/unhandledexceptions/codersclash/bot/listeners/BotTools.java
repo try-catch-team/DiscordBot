@@ -2,6 +2,7 @@ package de.unhandledexceptions.codersclash.bot.listeners;
 
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Config;
+import de.unhandledexceptions.codersclash.bot.core.reactions.Reactions;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -55,9 +56,9 @@ public class BotTools extends ListenerAdapter {
                                     msg = msg.getChannel().getMessageById(msg.getId()).complete();
                                     bot.getCaching().clearfromjda(jda).readall(jda);
                                     ArrayList<MessageEmbed.Field> fields = new ArrayList<>(msg.getEmbeds().get(0).getFields());
-                                    MessageEmbed.Field edit = fields.get(fields.size()-1);
-                                    EmbedBuilder builder =new EmbedBuilder(msg.getEmbeds().get(0)).clearFields();
-                                    for (MessageEmbed.Field field: fields) {
+                                    MessageEmbed.Field edit = fields.get(fields.size() - 1);
+                                    EmbedBuilder builder = new EmbedBuilder(msg.getEmbeds().get(0)).clearFields();
+                                    for (MessageEmbed.Field field : fields) {
                                         if (field != edit) {
                                             builder.addField(field);
                                         } else {
@@ -79,8 +80,8 @@ public class BotTools extends ListenerAdapter {
                 }
             } else if (event.getMessage().getContentRaw().matches(prefix + "(?i)bot ((perms)|(checkperms)|(permscheck))")) {
                 StringBuilder stringBuilder = new StringBuilder();
-                for (Permission permission: Permission.values()) {
-                    stringBuilder.append(((event.getGuild().getSelfMember().hasPermission(permission)) ? "✅" : "❌") +" "+ permission.getName()+ "\n");
+                for (Permission permission : Permission.values()) {
+                    stringBuilder.append(((event.getGuild().getSelfMember().hasPermission(permission)) ? Reactions.YES_EMOTE : Reactions.NO_EMOTE) + " " + permission.getName() + "\n");
                 }
                 event.getChannel().sendMessage(
                         stringBuilder.toString()
