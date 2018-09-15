@@ -60,14 +60,14 @@ public class Caching {
     public Caching readall(JDA jda) {
         logger.warn("Reading DB...");
         database.readall(this, jda);
-        logger.info("Readed DB!");
+        logger.info("DB has been read!");
         return this;
     }
 
     public Caching updateDB() {
         logger.warn("Updating DB...");
         database.updateDB(this);
-        logger.info("Updated DB!");
+        logger.info("DB has been updated!");
         return this;
     }
 

@@ -4,6 +4,7 @@ import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Config;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -55,8 +56,9 @@ public class MentionListener extends ListenerAdapter {
                     .addField("Current Uptime", this.getUptime(), true)
 										.addBlankField(true)
                     .addField("Source Code", "[GitHub](https://github.com/try-catch-team/DiscordBot)", true)
-                    .addField("Need Help?", "[Our Developement Server](https://discord.gg/fKtyBF7)", true)					
                     .addField("Help translating me!", "[Crowdin](https://crowdin.com/project/try-catch-bot)", true)
+                    .addField("Need Help?", "[Join our Developement Server!](https://discord.gg/fKtyBF7)", true)
+                    .addField("You want to use " + config.getBotName() + " on your Server too?", "[Invite him!](" + event.getJDA().asBot().getInviteUrl(Permission.ADMINISTRATOR) + ")", false)
                     .setColor(event.getGuild().getSelfMember().getColor());
             Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue();
             //Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue(this::reactionsAdd);
