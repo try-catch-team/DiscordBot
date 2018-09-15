@@ -1,5 +1,6 @@
 package de.unhandledexceptions.codersclash.bot.listeners;
 
+import com.github.johnnyjayjay.discord.commandapi.CommandSettings;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Config;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
@@ -13,7 +14,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -22,10 +22,12 @@ public class MentionListener extends ListenerAdapter {
 
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd LLL yyyy kk:mm:ss O", Locale.ENGLISH).withZone(ZoneId.of("Europe/Paris"));
     private Config config;
-    private final List<Object> CREATORS = Arrays.asList(261083609148948488L,234343108773412864L,226011931935375360L, 138607604506165248L);
+    private Bot bot;
+    private final List<Object> CREATORS = Arrays.asList(261083609148948488L, 234343108773412864L, 226011931935375360L, 138607604506165248L);
 
-    public MentionListener(Config config) {
+    public MentionListener(Config config, Bot bot) {
         this.config = config;
+        this.bot = bot;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class MentionListener extends ListenerAdapter {
             var builder = new EmbedBuilder();
             builder.clear().setThumbnail("https://i.imgur.com/L1RgtJb.gif")
                     .addField("Name", config.getBotName(), true)
-                    .addField("Version", config.getVersion(),true)
+                    .addField("Version", config.getVersion(), true)
                     .addField("Default Prefix", "`" + config.getPrefix() + "`", true)
                     .addField("This Guild's Prefix", "`" + prefix + "`", true)
                     .addField("Help Command", "`" + prefix + "[help|helpme|commands] <command>`", false)
@@ -50,16 +52,19 @@ public class MentionListener extends ListenerAdapter {
                     .addField("Joined this Server", event.getGuild().getSelfMember().getJoinDate().format(dateTimeFormatter), true)
                     .addField("Creators", stringBuilder.toString(), false)
                     .addField("Shards", Long.toString(shardManager.getShards().size()), true)
-                    .addField("Channels", Long.toString(shardManager.getTextChannelCache().size() + shardManager.getVoiceChannelCache().size()) , true)
+                    .addField("Channels", Long.toString(shardManager.getTextChannelCache().size() + shardManager.getVoiceChannelCache().size()), true)
                     .addField("Servers", Long.toString(shardManager.getGuildCache().size()), true)
                     .addField("Members", Long.toString(members), true)
                     .addField("Current Uptime", this.getUptime(), true)
-										.addBlankField(true)
+                    .addBlankField(true)
                     .addField("Source Code", "[GitHub](https://github.com/try-catch-team/DiscordBot)", true)
                     .addField("Help translating me!", "[Crowdin](https://crowdin.com/project/try-catch-bot)", true)
                     .addField("Need Help?", "[Join our Developement Server!](https://discord.gg/fKtyBF7)", true)
                     .addField("You want to use " + config.getBotName() + " on your Server too?", "[Invite him!](" + event.getJDA().asBot().getInviteUrl(Permission.ADMINISTRATOR) + ")", false)
                     .setColor(event.getGuild().getSelfMember().getColor());
+            if (!bot.getCommandSettings().isActivated()) {
+                builder.addField("CommandSettings are", event.getJDA().asBot().getShardManager().getEmotesByName("deactivated", false).get(0).getAsMention(), true);
+            }
             Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue();
             //Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue(this::reactionsAdd);
         }
