@@ -85,7 +85,7 @@ public class LinkManager {
 
             Long linkedChannel = channelIds.get(message.getGuild().getIdLong());
             if (linkedChannel != null && message.getChannel().getIdLong() == linkedChannel)
-                send(message.getGuild(), String.format("`%#s` :satellite: **%s:** %s", message.getGuild().getName(), message.getAuthor(), message.getContentDisplay()));
+                send(message.getGuild(), String.format("`%s` :satellite: **%s#%s:** %s", message.getGuild().getName(), message.getAuthor().getName(), message.getAuthor().getDiscriminator(), message.getContentDisplay()));
         }
 
         @Override
