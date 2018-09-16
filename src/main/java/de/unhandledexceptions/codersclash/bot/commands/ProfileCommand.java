@@ -17,6 +17,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static de.unhandledexceptions.codersclash.bot.util.Messages.*;
@@ -30,7 +31,7 @@ public class ProfileCommand implements ICommand {
 
     private ReportCommand reportCommand;
 
-    public ProfileCommand(ReportCommand reportCommand){
+    public ProfileCommand(ReportCommand reportCommand) {
         this.reportCommand = reportCommand;
     }
 
@@ -46,7 +47,7 @@ public class ProfileCommand implements ICommand {
                     target = event.getMessage().getMentionedMembers().get(0);
                 }
                 String nickname = ((target.getNickname() != null) ? target.getNickname() : "none");
-                String game = ((target.getGame() != null) ? target.getGame().getName() : "like a good boy!");
+                String game = ((target.getGame() != null) ? target.getGame().getName() : jda.getEmotesByName("partyparrot", false).get(0).getAsMention());
                 String gametype = "Using Discord";
                 String perms = Reactions.getNumber(Permissions.getPermissionLevel(target));
                 String reports = ((Reactions.getNumber(reportCommand.getReportCount(target)).equals(Reactions.getNumber(0))) ? ":zero: aka. **clean af**" : Reactions.getNumber(reportCommand.getReportCount(target)));
@@ -65,16 +66,19 @@ public class ProfileCommand implements ICommand {
                     } else if (getGameTyp == Game.GameType.WATCHING) {
                         gametype = "Watching";
                     }
-
                     var isRich = target.getGame().isRich();
                     var asRichPresence = target.getGame().asRichPresence();
-                    image = ((isRich) ? target.getGame().asRichPresence().getLargeImage().getUrl() : null);
+                    if (asRichPresence != null) {
+                        image = ((target.getGame().asRichPresence().getDetails() == null) ? null : Objects.requireNonNull(target.getGame().asRichPresence().getLargeImage()).getUrl());
+                    } else image = null;
                     if (isRich && getGameTyp == Game.GameType.LISTENING) {
                         game = "**" + asRichPresence.getDetails() + "** by *" + asRichPresence.getState() + "*";
                     } else if (isRich && getGameTyp == Game.GameType.STREAMING) {
                         game = "**" + asRichPresence.getName() + "** playing *" + asRichPresence.getDetails() + "*";
-                    } else if (isRich) {
+                    } else if (isRich && asRichPresence.getDetails() != null) {
                         game = "**" + asRichPresence.getName() + "** :arrow_right: " + asRichPresence.getDetails();
+                    } else if (isRich) {
+                        game = "**" + asRichPresence.getName() + "**";
                     }
                 }
                 if (getOnlineStatus == OnlineStatus.ONLINE) {
@@ -135,11 +139,11 @@ public class ProfileCommand implements ICommand {
         }
     }
 
-        @Override
-        public String info (Member member){
-            String prefix = Bot.getPrefix(member.getGuild().getIdLong());
-            return format("**Description**: Provides you with Information about yourself or another member.\n\n" +
-                    "**Usage**: `%s[profile|userinfo]` to view your profile\n\t\t\t  `%s[profile|userinfo] @Member` to view @Member's profile\n\n**Permission " +
-                    "level**: `1`", prefix, prefix);
-        }
+    @Override
+    public String info(Member member) {
+        String prefix = Bot.getPrefix(member.getGuild().getIdLong());
+        return format("**Description**: Provides you with Information about yourself or another member.\n\n" +
+                "**Usage**: `%s[profile|userinfo]` to view your profile\n\t\t\t  `%s[profile|userinfo] @Member` to view @Member's profile\n\n**Permission " +
+                "level**: `1`", prefix, prefix);
     }
+}

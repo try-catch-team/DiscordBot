@@ -27,7 +27,7 @@ public class BlockCommand implements ICommand {
         if (Permissions.getPermissionLevel(member) >= 2) {
             if (args.length >= 2 && event.getCommand().getJoinedArgs().matches("<@.\\d+> <#\\d+>( .+)?") && !event.getMessage().getMentionedMembers().isEmpty() && !event.getMessage().getMentionedChannels().isEmpty()) {
                 Channel targetChannel = event.getMessage().getMentionedChannels().get(0);
-                var reason = event.getCommand().getJoinedArgs(2);
+                var reason = ((args.length >= 3) ? event.getCommand().getJoinedArgs(2) : "No reason given");
                 var targetMember = event.getMessage().getMentionedMembers().get(0);
                 ChannelManager channelManager = new ChannelManager(targetChannel);
                 if (targetMember.hasPermission(targetChannel, Permission.VIEW_CHANNEL, Permission.MESSAGE_WRITE, Permission.MESSAGE_READ)) {

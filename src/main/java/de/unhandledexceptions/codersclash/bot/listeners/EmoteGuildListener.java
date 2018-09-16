@@ -25,6 +25,7 @@ public class EmoteGuildListener extends ListenerAdapter {
         put("offline", "https://i.imgur.com/fPB7iQm.png");
         put("activated", "https://i.imgur.com/6K6Ng4r.png");
         put("deactivated", "https://i.imgur.com/afdM7SK.png");
+        put("partyparrot", "https://i.imgur.com/if1kz0g.gif");
     }};
 
     public EmoteGuildListener(String name) {
