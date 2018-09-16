@@ -95,6 +95,7 @@ public class AutoChannelListener extends ListenerAdapter {
                                             channels.put(channel.getIdLong(), new AutoChannel(channel.getIdLong(), textChannel.getIdLong(), member.getUser().getIdLong(), channelJoined.getJDA()));
                                             textChannel.createPermissionOverride(guild.getPublicRole()).setDeny(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                                             textChannel.createPermissionOverride(member).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
+                                            textChannel.createPermissionOverride(guild.getSelfMember()).setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                                             sendMessage((MessageChannel) textChannel, Messages.Type.INFO,
                                                     format("To grant members access to this channel they need to join %s `%s` or %s can give them access to it!",
                                                             Reactions.SPEAKER, channel.getName(), member.getUser())).queue();

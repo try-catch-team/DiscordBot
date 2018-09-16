@@ -1,6 +1,5 @@
 package de.unhandledexceptions.codersclash.bot.listeners;
 
-import com.github.johnnyjayjay.discord.commandapi.CommandSettings;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Config;
 import de.unhandledexceptions.codersclash.bot.util.Messages;
@@ -65,8 +64,7 @@ public class MentionListener extends ListenerAdapter {
             if (!bot.getCommandSettings().isActivated()) {
                 builder.addField("CommandSettings are", event.getJDA().asBot().getShardManager().getEmotesByName("deactivated", false).get(0).getAsMention(), true);
             }
-            Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue();
-            //Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me!", "Hi!", false, builder).queue(this::reactionsAdd);
+            Messages.sendMessage(event.getChannel(), Messages.Type.NO_TYPE, "Introducing... me! " + event.getJDA().asBot().getShardManager().getEmotesByName("partyparrot", false).get(0).getAsMention(), "Hi!", false, builder).queue();
         }
     }
 
@@ -77,15 +75,6 @@ public class MentionListener extends ListenerAdapter {
         long minute = (uptimeLong / (1000 * 60)) % 60;
         long hour = (uptimeLong / (1000 * 60 * 60)) % 24;
         long day = (uptimeLong / (1000 * 60 * 60 * 24));
-        String uptime = String.format("**%d** days **%02d** hours **%02d** minutes **%02d** seconds", day, hour, minute, second);
-        return uptime;
+        return String.format("**%d** days **%02d** hours **%02d** minutes **%02d** seconds", day, hour, minute, second);
     }
-    /*private void reactionsAdd(Message msg) {
-        msg.addReaction("\uD83C\uDDF9").queue();
-        msg.addReaction("\uD83C\uDDF7").queue();
-        msg.addReaction("\uD83C\uDDFE").queue();
-        msg.addReaction("\uD83C\uDDE8").queue();
-        msg.addReaction("\uD83C\uDDE6").queue();
-        msg.addReaction("\uD83C\uDDED").queue();
-    }*/
 }
