@@ -20,7 +20,6 @@ public class Main {
 
         final var config = new Config("./config.json");
 
-
         if (!config.fileExists()) {
             config.create();
             logger.info("config.json has been created.");

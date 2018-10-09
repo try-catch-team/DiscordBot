@@ -1,10 +1,10 @@
 package de.unhandledexceptions.codersclash.bot.entities;
 
-import org.apache.commons.collections4.set.ListOrderedSet;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -24,7 +24,7 @@ public class PieChart {
     public PieChart(String title)
     {
         this.title = title;
-        this.tiles = new ListOrderedSet<>();
+        this.tiles = new LinkedHashSet<>();
     }
 
     public void create()

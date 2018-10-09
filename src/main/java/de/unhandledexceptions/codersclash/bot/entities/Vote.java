@@ -6,9 +6,9 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.requests.RestAction;
-import org.apache.commons.collections4.set.ListOrderedSet;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -38,7 +38,7 @@ public class Vote {
     public Vote(Guild guild, TextChannel setupChannel, ShardManager shardManager)
     {
         this.usersVoted = new ArrayList<>();
-        this.emotes = new ListOrderedSet<>();
+        this.emotes = new LinkedHashSet<>();
         this.voteAnswers = new ArrayList<>();
         this.guildId = guild.getIdLong();
         this.setupChannelId = setupChannel.getIdLong();

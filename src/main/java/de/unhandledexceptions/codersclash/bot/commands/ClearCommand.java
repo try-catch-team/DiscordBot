@@ -5,12 +5,15 @@ import com.github.johnnyjayjay.discord.commandapi.ICommand;
 import de.unhandledexceptions.codersclash.bot.core.Bot;
 import de.unhandledexceptions.codersclash.bot.core.Main;
 import de.unhandledexceptions.codersclash.bot.core.Permissions;
+import de.unhandledexceptions.codersclash.bot.util.Messages;
 import de.unhandledexceptions.codersclash.bot.util.Messages.*;
 import de.unhandledexceptions.codersclash.bot.util.Regex;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.requests.RequestFuture;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -32,7 +35,8 @@ public class ClearCommand implements ICommand {
         if (Permissions.getPermissionLevel(member) >= 4) { // Benötigtes Permission level überprüfen
             if (args.length == 1 && Regex.argsMatch(args, "[1-9]\\d{0,3}")) {
                 int amount = Integer.parseInt(args[0]);
-                Main.otherThread(() -> event.getMessage().delete().queue((v) -> this.clear(channel, amount), defaultFailure(channel)));
+                channel.getIterableHistory().takeAsync(amount).thenAccept(
+                        (l) -> RequestFuture.allOf(channel.purgeMessages(l)).thenAccept((v) -> Messages.sendMessage(channel, Type.SUCCESS, "Deleted `" + amount + "` messages.").queue()));
             } else if (args.length == 1){
                 sendMessage(channel, Type.WARNING, format("`%s` is not a valid number!", args[0])).queue((msg) -> msg.delete().queueAfter(7, TimeUnit.SECONDS));
             } else {
@@ -43,7 +47,8 @@ public class ClearCommand implements ICommand {
         }
     }
 
-    private void clear(TextChannel channel, int amount) {
+    // dieser e shit ist jetzt redundant
+    /*private void clear(TextChannel channel, int amount) {
         long twoWeeksAgo = (System.currentTimeMillis() - (14 * 24 * 60 * 60 * 1000)); // System der JDA, die Zeit zu messen
         channel.getHistory().retrievePast(amount > 100 ? 100 : amount).queue((messages) -> { // Wenn amount größer als 100 ist, retrieve 100, ansonsten amount
             // filter die messages, die man löschen kann, heraus
@@ -67,7 +72,7 @@ public class ClearCommand implements ICommand {
                 }
             }
         });
-    }
+    }*/
 
     // Standard success callback
     private void success(TextChannel channel) {
